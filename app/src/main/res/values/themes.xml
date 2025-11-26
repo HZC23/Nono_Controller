@@ -28,4 +28,9 @@
         <item name="colorSurfaceInverse">@color/md_theme_inverseSurface</item>
         <item name="colorPrimaryInverse">@color/md_theme_inversePrimary</item>
     </style>
+
+    <style name="Widget.Nono.Button.Error" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">?attr/colorError</item>
+        <item name="android:textColor">?attr/colorOnError</item>
+    </style>
 </resources>

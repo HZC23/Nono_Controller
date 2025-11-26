@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
     buildToolsVersion '30.0.3'
     lintOptions {
         abortOnError false
@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.hzc.nonocontroller"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0"
     }
@@ -44,17 +44,19 @@ dependencies {
     implementation fileTree(dir: 'libs', includes: ['*.jar'])
     testImplementation 'junit:junit:4.12'
     //noinspection GradleCompatible
-    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'androidx.activity:activity:1.5.1'
+    implementation 'androidx.activity:activity:1.2.4'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.3.1'
-    implementation 'androidx.lifecycle:lifecycle-livedata:2.3.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.5.1'
     implementation 'com.google.code.gson:gson:2.8.6'
 
     // Updated Material Design library for M3 components
     implementation 'com.google.android.material:material:1.6.1'
 
     // Android Navigation Component
-    implementation "androidx.navigation:navigation-fragment:2.3.5"
-    implementation "androidx.navigation:navigation-ui:2.3.5"
+    implementation "androidx.navigation:navigation-fragment:2.5.3"
+    implementation "androidx.navigation:navigation-ui:2.5.3"
 }
