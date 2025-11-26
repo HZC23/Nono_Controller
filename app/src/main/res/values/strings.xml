@@ -11,7 +11,17 @@
     <string name="speed_target_format">Speed Target: %d</string>
     <string name="speed_current_format">Speed Current: %d</string>
 
-    <string name="status_connected">Connected</string>
-    <string name="status_connecting">Connecting...</string>
-    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connected">Connecté au robot</string>
+    <string name="status_connecting">Connexion en cours...</string>
+    <string name="status_disconnected">Déconnecté</string>
+    <string name="settings_title">Paramètres</string>
+    <string name="goto_heading_title">Aller au Cap</string>
+    <string name="goto_heading_message">Entrez le cap en degrés (0–359):</string>
+    <string name="invalid_input">Entrée invalide</string>
+    <string name="set_compass_offset_title">Définir l\'Offset du Compas</string>
+    <string name="set_compass_offset_message">Entrez la valeur de compensation:</string>
+    <string name="set_button">Définir</string>
+    <string name="go_button">Go</string>
+    <string name="cancel_button">Annuler</string>
+
 </resources>

@@ -10,197 +10,43 @@
         <import type="android.view.View"/>
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
+
         android:layout_width="match_parent"
+
         android:layout_height="match_parent"
-        android:background="?android:attr/colorBackground"
+
         tools:context=".MainActivity">
 
-        <!-- Header: Icons only, no title -->
-        <LinearLayout
-            android:id="@+id/status_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="4dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+    
 
-            <ImageView
-                android:id="@+id/settings_button"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:padding="8dp"
-                android:src="@drawable/ic_baseline_settings_24"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="?attr/colorOnSurface"/>
+                <androidx.fragment.app.FragmentContainerView
 
-            <ImageView
-                android:id="@+id/connect_icon_button"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:padding="8dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:connectionStatusIcon="@{viewModel.connectionState}"
-                tools:src="@drawable/ic_ble_disconnected"/>
-        </LinearLayout>
+    
 
-        <!-- Guideline to split screen -->
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline_vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintGuide_percent="0.5" />
+                    android:id="@+id/nav_host_fragment"
 
-        <!-- Left Panel: Joystick and LCD -->
-        <LinearLayout
-            android:id="@+id/left_panel"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:orientation="vertical"
-            android:gravity="center"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/guideline_vertical"
-            app:layout_constraintTop_toBottomOf="@+id/status_bar"
-            app:layout_constraintBottom_toBottomOf="parent">
+    
 
-            <include
-                android:id="@+id/controls_panel_include"
-                layout="@layout/controls_panel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:viewModel="@{viewModel}"/>
+                    android:name="androidx.navigation.fragment.NavHostFragment"
 
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/lcd_message_card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                app:cardElevation="2dp"
-                app:cardCornerRadius="12dp">
-                <LinearLayout
+    
+
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="12dp"
-                    android:gravity="center_vertical">
-                    <EditText
-                        android:id="@+id/main_lcd_message_input"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:hint="Message LCD"/>
-                    <Button
-                        android:id="@+id/main_send_lcd_message_button"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="Envoyer"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-        </LinearLayout>
+    
 
-        <!-- Right Panel: Scrollable controls -->
-        <ScrollView
-            android:id="@+id/right_panel_scroll"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:fillViewport="true"
-            app:layout_constraintStart_toEndOf="@id/guideline_vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/status_bar"
-            app:layout_constraintBottom_toBottomOf="parent">
+                    android:layout_height="match_parent"
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="4dp">
+    
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    app:defaultNavHost="true"
 
-                    <!-- Right Panel - Column 1: Autonomous Modes -->
-                    <FrameLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1">
+    
 
-                        <include
-                            android:id="@+id/autonomous_modes_card_include"
-                            layout="@layout/autonomous_modes_card"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            app:viewModel="@{viewModel}"
-                            android:visibility="@{viewModel.autonomousModesVisibility}"/>
+                    app:navGraph="@navigation/nav_graph" />
 
-                        <include
-                            android:id="@+id/active_autonomous_controls_include"
-                            layout="@layout/active_autonomous_controls"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            app:viewModel="@{viewModel}"
-                            android:visibility="@{viewModel.activeAutonomousControlsVisibility}"/>
-                    </FrameLayout>
+    
 
-                    <!-- Right Panel - Column 2: Accessories -->
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:layout_margin="4dp"
-                        app:cardElevation="2dp"
-                        app:cardCornerRadius="12dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="12dp">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Vitesse"
-                                android:textAppearance="?attr/textAppearanceSubtitle1"/>
-
-                            <SeekBar
-                                android:id="@+id/speed_slider_main"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:max="255"
-                                android:progress="@{viewModel.speed}"
-                                app:onSeekBarChangeListener="@{viewModel.onSpeedChanged}"/>
-
-                            <com.google.android.material.switchmaterial.SwitchMaterial
-                                android:id="@+id/light_switch_main"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="Phares"
-                                android:textAppearance="?attr/textAppearanceSubtitle1"
-                                android:onCheckedChanged="@{(_, isChecked) -> viewModel.onLightSwitched(isChecked)}"/>
-
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                </LinearLayout>
-
-                <include
-                    android:id="@+id/telemetry_panel_include"
-                    layout="@layout/telemetry_panel"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:viewModel="@{viewModel}"/>
-
-            </LinearLayout>
-        </ScrollView>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </RelativeLayout>
 </layout>

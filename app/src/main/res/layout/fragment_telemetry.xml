@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="viewModel"
+            type="com.hzc.nonocontroller.viewmodel.MainViewModel" />
+    </data>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <!-- Telemetry Display Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Télémétrie"
+                        android:textAppearance="?attr/textAppearanceHeadline6"
+                        android:layout_marginBottom="8dp"/>
+
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="2">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@{`Etat: ` + viewModel.telemetry.state}"
+                            tools:text="Etat: IDLE"
+                            android:textAppearance="?attr/textAppearanceBody1"
+                            android:layout_marginEnd="16dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@{`Cap: ` + viewModel.telemetry.heading + `°`}"
+                            tools:text="Cap: 90°"
+                            android:textAppearance="?attr/textAppearanceBody1"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@{`Distance US: ` + viewModel.telemetry.distance + ` cm`}"
+                            tools:text="Distance US: 100 cm"
+                            android:textAppearance="?attr/textAppearanceBody1"
+                            android:layout_marginEnd="16dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@{`Distance Laser: ` + viewModel.telemetry.distanceLaser + ` mm`}"
+                            tools:text="Distance Laser: 200 mm"
+                            android:textAppearance="?attr/textAppearanceBody1"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@{`Batterie: ` + viewModel.telemetry.battery + `%`}"
+                            tools:text="Batterie: 75%"
+                            android:textAppearance="?attr/textAppearanceBody1"
+                            android:layout_marginEnd="16dp"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@{`Vitesse Cible: ` + viewModel.telemetry.speedTarget}"
+                            tools:text="Vitesse Cible: 200"
+                            android:textAppearance="?attr/textAppearanceBody1"/>
+
+                    </GridLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Serial Log Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Journal Série"
+                        android:textAppearance="?attr/textAppearanceHeadline6"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/serial_log_text_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:maxLines="10"
+                        android:scrollbars="vertical"
+                        android:text="@{viewModel.serialMonitor}"
+                        tools:text="Line 1\nLine 2\nLine 3"
+                        android:textAppearance="?attr/textAppearanceBody2"/>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
+</layout>

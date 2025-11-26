@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="viewModel"
+            type="com.hzc.nonocontroller.viewmodel.MainViewModel" />
+        <import type="android.view.View"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/root_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp">
+
+        <!-- Left Section: D-Pad -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/dpad_section"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/telemetry_section"
+            app:layout_constraintHorizontal_weight="1">
+
+            <ImageButton
+                android:id="@+id/button_up"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_arrow_up"
+                android:background="@drawable/dpad_button_background"
+                app:layout_constraintBottom_toTopOf="@+id/guideline_h"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginBottom="32dp"/>
+
+            <ImageButton
+                android:id="@+id/button_down"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_arrow_down"
+                android:background="@drawable/dpad_button_background"
+                app:layout_constraintTop_toBottomOf="@+id/guideline_h"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="32dp"/>
+
+            <ImageButton
+                android:id="@+id/button_left"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_arrow_left"
+                android:background="@drawable/dpad_button_background"
+                app:layout_constraintEnd_toStartOf="@+id/guideline_v"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginEnd="32dp"/>
+
+            <ImageButton
+                android:id="@+id/button_right"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@drawable/ic_arrow_right"
+                android:background="@drawable/dpad_button_background"
+                app:layout_constraintStart_toEndOf="@+id/guideline_v"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginStart="32dp"/>
+                
+            <Button
+                android:id="@+id/button_stop_center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="STOP"
+                android:onClick="@{() -> viewModel.onStopButtonClicked()}"
+                app:backgroundTint="?attr/colorError"
+                android:textColor="?attr/onError"
+                app:layout_constraintTop_toBottomOf="@id/button_down"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline_h"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_percent="0.5"/>
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline_v"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5"/>
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Center Section: Telemetry -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/telemetry_section"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toEndOf="@+id/dpad_section"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/actions_section"
+            app:layout_constraintHorizontal_weight="1"
+            android:layout_margin="8dp"
+            app:cardElevation="2dp"
+            app:cardCornerRadius="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Télémétrie"
+                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:layout_marginBottom="8dp"/>
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{`Etat: ` + viewModel.telemetry.state}"
+                        tools:text="Etat: IDLE"
+                        android:textAppearance="?attr/textAppearanceBody1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{`Cap: ` + viewModel.telemetry.heading + `°`}"
+                        tools:text="Cap: 90°"
+                        android:textAppearance="?attr/textAppearanceBody1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{`Distance US: ` + viewModel.telemetry.distance + ` cm`}"
+                        tools:text="Distance US: 100 cm"
+                        android:textAppearance="?attr/textAppearanceBody1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{`Distance Laser: ` + viewModel.telemetry.distanceLaser + ` mm`}"
+                        tools:text="Distance Laser: 200 mm"
+                        android:textAppearance="?attr/textAppearanceBody1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{`Batterie: ` + viewModel.telemetry.battery + `%`}"
+                        tools:text="Batterie: 75%"
+                        android:textAppearance="?attr/textAppearanceBody1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{`Vitesse Cible: ` + viewModel.telemetry.speedTarget}"
+                        tools:text="Vitesse Cible: 200"
+                        android:textAppearance="?attr/textAppearanceBody1"/>
+
+                </GridLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Right Section: Actions -->
+        <!-- Right Section: Actions -->
+        <LinearLayout
+            android:id="@+id/actions_section"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toEndOf="@id/telemetry_section"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="1"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:padding="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/scan_button"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="Scan"/>
+                <Button
+                    android:id="@+id/settings_button"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="..."/>
+            </LinearLayout>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2">
+
+                <ImageButton
+                    android:id="@+id/smart_avoidance_button"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:src="@drawable/ic_baseline_explore_24"
+                    android:onClick="@{() -> viewModel.onSmartAvoidanceClicked()}"/>
+
+                <ImageButton
+                    android:id="@+id/goto_heading_button"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:src="@drawable/ic_baseline_center_focus_strong_24"
+                    />
+
+                <ImageButton
+                    android:id="@+id/sentry_mode_button"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:src="@drawable/ic_baseline_visibility_24"
+                    android:onClick="@{() -> viewModel.onSentryModeClicked()}"/>
+
+                <ImageButton
+                    android:id="@+id/calibrate_compass_button"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="4dp"
+                    android:src="@drawable/ic_baseline_settings_24"
+                    android:onClick="@{() -> viewModel.onCalibrateCompassClicked()}"/>
+
+            </GridLayout>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/light_switch_main"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Phares"
+                android:textAppearance="?attr/textAppearanceSubtitle1"
+                android:onCheckedChanged="@{(_, isChecked) -> viewModel.onLightSwitched(isChecked)}"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vitesse"
+                android:textAppearance="?attr/textAppearanceSubtitle1"/>
+
+            <SeekBar
+                android:id="@+id/speed_slider_main"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="255"
+                android:progress="@{viewModel.speed}"
+                app:onSeekBarChangeListener="@{viewModel.onSpeedChanged}"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <EditText
+                    android:id="@+id/main_lcd_message_input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Message LCD"/>
+                <Button
+                    android:id="@+id/main_send_lcd_message_button"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="OK"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

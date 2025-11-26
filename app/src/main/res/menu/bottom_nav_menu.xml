@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_control"
+        android:icon="@drawable/ic_baseline_gamepad_24"
+        android:title="Control"/>
+    <item
+        android:id="@+id/navigation_autonomous"
+        android:icon="@drawable/ic_baseline_auto_awesome_24"
+        android:title="Autonomous"/>
+    <item
+        android:id="@+id/navigation_telemetry"
+        android:icon="@drawable/ic_baseline_analytics_24"
+        android:title="Telemetry"/>
+</menu>

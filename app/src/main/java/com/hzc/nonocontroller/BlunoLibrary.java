@@ -347,7 +347,7 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
             				gattService.getUuid().toString());
             	}
             	getGattServices(mBluetoothLeService.getSupportedGattServices());
-            } else if (BluetoothLeService_Fixed.ACTION_DATA_AVAILABLE.equals(action)) {
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
             	if(mSCharacteristic==mModelNumberCharacteristic)
             	{
             		if (intent.getStringExtra(BluetoothLeService.EXTRA_DATA).toUpperCase().startsWith("DF BLUNO")) {

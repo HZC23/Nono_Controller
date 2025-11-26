@@ -5,20 +5,34 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import android.util.Log;
 import android.widget.SeekBar;
-
 import android.view.View;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.hzc.nonocontroller.BlunoLibrary;
 import com.hzc.nonocontroller.data.TelemetryData;
+import androidx.lifecycle.Observer;
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+import static com.hzc.nonocontroller.Constants.*;
 
 public class MainViewModel extends ViewModel {
 
     private final BlunoLibrary blunoLibrary;
+    private final Observer<TelemetryData> telemetryObserver;
+
+    // Command Queueing
+    private final Queue<String> commandQueue = new LinkedList<>();
+    private final Handler sendingHandler = new Handler(Looper.getMainLooper());
+    private static final long SEND_DELAY_MS = 100; // Delay between sending commands
 
     // LiveData for UI state
     private final MutableLiveData<TelemetryData> _telemetry = new MutableLiveData<>(new TelemetryData());
     public final LiveData<TelemetryData> telemetry = _telemetry;
 
+    private final LinkedList<String> serialLogBuffer = new LinkedList<>();
     private final MutableLiveData<String> _serialMonitor = new MutableLiveData<>("");
     public final LiveData<String> serialMonitor = _serialMonitor;
 
@@ -31,7 +45,22 @@ public class MainViewModel extends ViewModel {
     public MainViewModel(BlunoLibrary blunoLibrary) {
         this.blunoLibrary = blunoLibrary;
         // Observe the telemetry data to update UI visibility
-        _telemetry.observeForever(this::updateUIVisibilityFromState);
+        telemetryObserver = this::updateUIVisibilityFromState;
+        _telemetry.observeForever(telemetryObserver);
+
+        // Observe connection state to manage command sending
+        _connectionState.observeForever(s -> {
+            if (s == BlunoLibrary.connectionStateEnum.isConnected) {
+                attemptToSendNextCommand(); // Start sending any queued commands
+            }
+        });
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        _telemetry.removeObserver(telemetryObserver);
+        sendingHandler.removeCallbacksAndMessages(null); // Stop any pending sends
     }
 
     // --- UI Visibility LiveData ---
@@ -75,16 +104,19 @@ public class MainViewModel extends ViewModel {
     }
 
     public void updateSerialMonitor(String newText) {
-        String currentText = _serialMonitor.getValue();
-        if (currentText == null) {
-            currentText = "";
+        serialLogBuffer.add(newText.trim()); // Add new line, trimmed
+
+        // Remove oldest lines if buffer exceeds limit
+        while (serialLogBuffer.size() > MAX_SERIAL_MONITOR_LINES) {
+            serialLogBuffer.removeFirst();
         }
-        // Append new text and limit the length to avoid excessive memory usage
-        String updatedText = currentText + newText;
-        if (updatedText.length() > 5000) { // Keep last 5000 characters
-            updatedText = updatedText.substring(updatedText.length() - 5000);
+
+        // Combine lines for display
+        StringBuilder sb = new StringBuilder();
+        for (String line : serialLogBuffer) {
+            sb.append(line).append("\n");
         }
-        _serialMonitor.postValue(updatedText);
+        _serialMonitor.postValue(sb.toString());
     }
 
     public void setConnectionState(BlunoLibrary.connectionStateEnum s) {
@@ -94,58 +126,54 @@ public class MainViewModel extends ViewModel {
     // --- UI Event Handlers ---
 
     public void onTurretScanClicked(View view) {
-        sendCommand("CMD:SCAN:START\n");
+        sendCommand(buildCommand(ACTION_SCAN, VALUE_START));
     }
 
     public void onStopButtonClicked() {
-        sendCommand("CMD:MOVE:STOP\n");
+        sendCommand(buildCommand(ACTION_MOVE, VALUE_STOP));
     }
 
     // --- Manual Control ---
     public void onDirectionalButton(String direction) {
-        String command = "";
-        switch (direction) {
-            case "UP":
-                command = "CMD:MOVE:FWD\n";
-                break;
-            case "DOWN":
-                command = "CMD:MOVE:BWD\n";
-                break;
-            case "LEFT":
-                command = "CMD:MOVE:LEFT\n";
-                break;
-            case "RIGHT":
-                command = "CMD:MOVE:RIGHT\n";
-                break;
-        }
-        sendCommand(command);
+        sendCommand(buildCommand(ACTION_MOVE, directionToValue(direction)));
     }
 
     public void onDirectionalButtonReleased() {
-        sendCommand("CMD:MOVE:STOP\n");
+        sendCommand(buildCommand(ACTION_MOVE, VALUE_STOP));
     }
 
-    
+    // Helper to map direction string to command value
+    private String directionToValue(String direction) {
+        switch (direction) {
+            case DIRECTION_UP: return VALUE_FWD;
+            case DIRECTION_DOWN: return VALUE_BWD;
+            case DIRECTION_LEFT: return VALUE_LEFT;
+            case DIRECTION_RIGHT: return VALUE_RIGHT;
+            default: return VALUE_STOP;
+        }
+    }
+
 
     // --- Autonomous Control ---
     public void onSmartAvoidanceClicked() {
-        sendCommand("CMD:MODE:AVOID\n");
+        sendCommand(buildCommand(ACTION_MODE, VALUE_AVOID));
     }
 
+
     public void onGoToHeadingClicked(int heading) {
-        sendCommand("CMD:GOTO:" + heading + "\n");
+        sendCommand(buildCommand(ACTION_GOTO, heading));
     }
 
     public void onSentryModeClicked() {
-        sendCommand("CMD:MODE:SENTRY\n");
+        sendCommand(buildCommand(ACTION_MODE, VALUE_SENTRY));
     }
 
     public void onPauseClicked() {
-        sendCommand("CMD:PAUSE\n");
+        sendCommand(buildCommand(ACTION_PAUSE));
     }
 
     public void onResumeClicked() {
-        sendCommand("CMD:RESUME\n");
+        sendCommand(buildCommand(ACTION_RESUME));
     }
 
     // --- Settings ---
@@ -164,9 +192,9 @@ public class MainViewModel extends ViewModel {
     // --- Accessories & System ---
     public void onLightSwitched(boolean isChecked) {
         if (isChecked) {
-            sendCommand("CMD:LIGHT:ON\n");
+            sendCommand(buildCommand(ACTION_LIGHT, VALUE_ON));
         } else {
-            sendCommand("CMD:LIGHT:OFF\n");
+            sendCommand(buildCommand(ACTION_LIGHT, VALUE_OFF));
         }
     }
 
@@ -183,33 +211,40 @@ public class MainViewModel extends ViewModel {
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            sendCommand("CMD:SPEED:" + seekBar.getProgress() + "\n");
+            sendCommand(buildCommand(ACTION_SPEED, seekBar.getProgress()));
         }
     };
 
     public void onCalibrateCompassClicked() {
-        sendCommand("CMD:CALIBRATE:COMPASS\n");
+        sendCommand(buildCommand(ACTION_CALIBRATE, VALUE_COMPASS));
     }
 
-    
 
     public void onSetCompassOffsetClicked(float offset) {
-        sendCommand("CMD:COMPASS_OFFSET:" + offset + "\n");
+        sendCommand(buildCommand(ACTION_COMPASS_OFFSET, offset));
     }
 
     public void onSendLcdMessageClicked(String message) {
         if (message != null && !message.isEmpty()) {
-            sendCommand("CMD:LCD:" + message + "\n");
+            sendCommand(buildCommand(ACTION_LCD, message));
         }
     }
 
     // --- Private Helper ---
     private void sendCommand(String command) {
-        if (blunoLibrary != null && _connectionState.getValue() == BlunoLibrary.connectionStateEnum.isConnected) {
+        commandQueue.add(command);
+        attemptToSendNextCommand();
+    }
+
+    private void attemptToSendNextCommand() {
+        if (blunoLibrary != null && _connectionState.getValue() == BlunoLibrary.connectionStateEnum.isConnected && !commandQueue.isEmpty()) {
+            String command = commandQueue.poll();
             blunoLibrary.serialSend(command);
             Log.d("MainViewModel", "Sent: " + command.trim());
-        } else {
-            Log.w("MainViewModel", "Not connected, command ignored: " + command.trim());
+            // Schedule the next command sending
+            sendingHandler.postDelayed(this::attemptToSendNextCommand, SEND_DELAY_MS);
+        } else if (_connectionState.getValue() != BlunoLibrary.connectionStateEnum.isConnected && !commandQueue.isEmpty()) {
+            Log.w("MainViewModel", "Not connected, commands queued: " + commandQueue.size());
         }
     }
 }
