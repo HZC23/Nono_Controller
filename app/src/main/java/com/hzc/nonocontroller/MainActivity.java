@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements BlunoLibraryDeleg
         setContentView(R.layout.activity_main);
 
         blunoLibrary = BlunoLibrary.getInstance(this, this);
-        MainViewModelFactory factory = new MainViewModelFactory(blunoLibrary);
+        MainViewModelFactory factory = new MainViewModelFactory(getApplication(), blunoLibrary);
         viewModel = new ViewModelProvider(this, factory).get(MainViewModel.class);
 
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);

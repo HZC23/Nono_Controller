@@ -8,6 +8,12 @@ import android.widget.SeekBar;
 import android.view.View;
 import android.os.Handler;
 import android.os.Looper;
+import android.app.Application;
+import android.content.Context;
+import android.os.Vibrator;
+import android.os.Build;
+import android.os.VibrationEffect;
+
 
 import com.hzc.nonocontroller.BlunoLibrary;
 import com.hzc.nonocontroller.data.TelemetryData;
@@ -22,6 +28,8 @@ public class MainViewModel extends ViewModel {
 
     private final BlunoLibrary blunoLibrary;
     private final Observer<TelemetryData> telemetryObserver;
+    private final Application application; // Storing application context
+    private final Vibrator vibrator;
 
     // Command Queueing
     private final Queue<String> commandQueue = new LinkedList<>();
@@ -42,8 +50,11 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<Integer> _speed = new MutableLiveData<>(150);
     public final LiveData<Integer> speed = _speed;
 
-    public MainViewModel(BlunoLibrary blunoLibrary) {
+    public MainViewModel(Application application, BlunoLibrary blunoLibrary) {
+        super();
+        this.application = application;
         this.blunoLibrary = blunoLibrary;
+        this.vibrator = (Vibrator) application.getSystemService(Context.VIBRATOR_SERVICE);
         // Observe the telemetry data to update UI visibility
         telemetryObserver = this::updateUIVisibilityFromState;
         _telemetry.observeForever(telemetryObserver);
@@ -126,19 +137,23 @@ public class MainViewModel extends ViewModel {
     // --- UI Event Handlers ---
 
     public void onTurretScanClicked(View view) {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_SCAN, VALUE_START));
     }
 
     public void onStopButtonClicked() {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_MOVE, VALUE_STOP));
     }
 
     // --- Manual Control ---
     public void onDirectionalButton(String direction) {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_MOVE, directionToValue(direction)));
     }
 
     public void onDirectionalButtonReleased() {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_MOVE, VALUE_STOP));
     }
 
@@ -156,41 +171,50 @@ public class MainViewModel extends ViewModel {
 
     // --- Autonomous Control ---
     public void onSmartAvoidanceClicked() {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_MODE, VALUE_AVOID));
     }
 
 
     public void onGoToHeadingClicked(int heading) {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_GOTO, heading));
     }
 
     public void onSentryModeClicked() {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_MODE, VALUE_SENTRY));
     }
 
     public void onPauseClicked() {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_PAUSE));
     }
 
     public void onResumeClicked() {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_RESUME));
     }
 
     // --- Settings ---
     public void onSettingsClicked() {
+        performHapticFeedback();
         // Logic to show settings dialog will be in MainActivity
     }
 
     public void onToggleConsole(boolean show) {
+        performHapticFeedback();
         // This will be used to update a LiveData for console visibility
     }
 
     public void onGoToCalibrationClicked() {
+        performHapticFeedback();
         // This could navigate to a new Activity or show a specific dialog
     }
 
     // --- Accessories & System ---
     public void onLightSwitched(boolean isChecked) {
+        performHapticFeedback();
         if (isChecked) {
             sendCommand(buildCommand(ACTION_LIGHT, VALUE_ON));
         } else {
@@ -207,24 +231,30 @@ public class MainViewModel extends ViewModel {
         }
 
         @Override
-        public void onStartTrackingTouch(SeekBar seekBar) { }
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            performHapticFeedback();
+        }
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
+            performHapticFeedback();
             sendCommand(buildCommand(ACTION_SPEED, seekBar.getProgress()));
         }
     };
 
     public void onCalibrateCompassClicked() {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_CALIBRATE, VALUE_COMPASS));
     }
 
 
     public void onSetCompassOffsetClicked(float offset) {
+        performHapticFeedback();
         sendCommand(buildCommand(ACTION_COMPASS_OFFSET, offset));
     }
 
     public void onSendLcdMessageClicked(String message) {
+        performHapticFeedback();
         if (message != null && !message.isEmpty()) {
             sendCommand(buildCommand(ACTION_LCD, message));
         }
@@ -245,6 +275,17 @@ public class MainViewModel extends ViewModel {
             sendingHandler.postDelayed(this::attemptToSendNextCommand, SEND_DELAY_MS);
         } else if (_connectionState.getValue() != BlunoLibrary.connectionStateEnum.isConnected && !commandQueue.isEmpty()) {
             Log.w("MainViewModel", "Not connected, commands queued: " + commandQueue.size());
+        }
+    }
+
+    private void performHapticFeedback() {
+        if (vibrator != null && vibrator.hasVibrator()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                // Deprecated in API 26
+                vibrator.vibrate(50);
+            }
         }
     }
 }
