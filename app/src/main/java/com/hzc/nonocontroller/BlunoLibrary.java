@@ -119,10 +119,7 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
     BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-	private LeDeviceListAdapter mLeDeviceListAdapter=null;
 	private BluetoothAdapter mBluetoothAdapter;
-	private boolean mScanning =false;
-	AlertDialog mScanDeviceDialog;
     private String mDeviceName;
     private String mDeviceAddress;
 	public enum connectionStateEnum{isNull, isScanning, isToScan, isConnecting , isConnected, isDisconnecting};
@@ -167,64 +164,6 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
 
 		Intent gattServiceIntent = new Intent(mainContext, BluetoothLeService.class);
 		mainContext.bindService(gattServiceIntent, mServiceConnection, Context.BIND_AUTO_CREATE);
-        
-		// Initializes list view adapter.
-		mLeDeviceListAdapter = new LeDeviceListAdapter();
-		// Initializes and show the scan Device Dialog
-		mScanDeviceDialog = new AlertDialog.Builder(mainContext)
-		.setTitle("BLE Device Scan...").setAdapter(mLeDeviceListAdapter, new DialogInterface.OnClickListener() {
-			
-			@SuppressLint("MissingPermission")
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				final BluetoothDevice device = mLeDeviceListAdapter.getDevice(which);
-				if (device == null)
-					return;
-				scanLeDevice(false);
-
-		        if(device.getName()==null || device.getAddress()==null)
-		        {
-		        	mConnectionState=connectionStateEnum.isToScan;
-		        	delegate.onConectionStateChange(mConnectionState);
-		        }
-		        else{
-
-					System.out.println("onListItemClick " + device.getName().toString());
-
-					System.out.println("Device Name:"+device.getName() + "   " + "Device Name:" + device.getAddress());
-
-					mDeviceName=device.getName().toString();
-					mDeviceAddress=device.getAddress().toString();
-
-		        	if (mBluetoothLeService.connect(mDeviceAddress)) {
-				        Log.d(TAG, "Connect request success");
-			        	mConnectionState=connectionStateEnum.isConnecting;
-			        	delegate.onConectionStateChange(mConnectionState);
-			            mHandler.postDelayed(mConnectingOverTimeRunnable, 10000);
-		        	}
-			        else {
-				        Log.d(TAG, "Connect request fail");
-			        	mConnectionState=connectionStateEnum.isToScan;
-			        	delegate.onConectionStateChange(mConnectionState);
-					}
-		        }
-			}
-		})
-		.setOnCancelListener(new DialogInterface.OnCancelListener() {
-
-			@SuppressLint("MissingPermission")
-			@Override
-			public void onCancel(DialogInterface arg0) {
-				System.out.println("mBluetoothAdapter.stopLeScan");
-
-				mConnectionState = connectionStateEnum.isToScan;
-				delegate.onConectionStateChange(mConnectionState);
-				mScanDeviceDialog.dismiss();
-
-				scanLeDevice(false);
-			}
-		}).create();
-		
     }
     
     
@@ -254,9 +193,8 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
     	System.out.println("BLUNOActivity onPause");
 		scanLeDevice(false);
 		mainContext.unregisterReceiver(mGattUpdateReceiver);
-		mLeDeviceListAdapter.clear();
     	mConnectionState=connectionStateEnum.isToScan;
-    	delegate.onConectionStateChange(mConnectionState);		mScanDeviceDialog.dismiss();
+    	delegate.onConectionStateChange(mConnectionState);
 		if(mBluetoothLeService!=null)
 		{
 			mBluetoothLeService.disconnect();
@@ -415,7 +353,7 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
                 mConnectionState = connectionStateEnum.isScanning;
                 delegate.onConectionStateChange(mConnectionState);
                 scanLeDevice(true);
-                mScanDeviceDialog.show();
+                delegate.onScanDialogRequested();
                 break;
             case isScanning:
                 // Already scanning, do nothing
@@ -438,29 +376,12 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
     }
     
 	@SuppressLint("MissingPermission")
-	void scanLeDevice(final boolean enable) {
+	public void scanLeDevice(final boolean enable) { // Changed to public
 		if (enable) {
-			// Stops scanning after a pre-defined scan period.
-
 			System.out.println("mBluetoothAdapter.startLeScan");
-			
-			if(mLeDeviceListAdapter != null)
-			{
-				mLeDeviceListAdapter.clear();
-				mLeDeviceListAdapter.notifyDataSetChanged();
-			}
-			
-			if(!mScanning)
-			{
-				mScanning = true;
-				mBluetoothAdapter.startLeScan(mLeScanCallback);
-			}
+			mBluetoothAdapter.startLeScan(mLeScanCallback);
 		} else {
-			if(mScanning)
-			{
-				mScanning = false;
-				mBluetoothAdapter.stopLeScan(mLeScanCallback);
-			}
+			mBluetoothAdapter.stopLeScan(mLeScanCallback);
 		}
 	}
 	
@@ -491,14 +412,10 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
 		@Override
 		public void onLeScan(final BluetoothDevice device, int rssi,
 				byte[] scanRecord) {
-			((Activity) mainContext).runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					Log.d(TAG, "Discovered device: " + device.getName() + " (" + device.getAddress() + ")"); // Added log
-					mLeDeviceListAdapter.addDevice(device);
-					mLeDeviceListAdapter.notifyDataSetChanged();
-				}
-			});
+            Log.d(TAG, "Discovered device: " + device.getName() + " (" + device.getAddress() + ")");
+            if (delegate != null) {
+                delegate.onDeviceDiscovered(device);
+            }
 		}
 	};
 	
@@ -564,151 +481,6 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
         return intentFilter;
     }
 	
-	private class LeDeviceListAdapter extends BaseAdapter {
-		private ArrayList<BluetoothDevice> mLeDevices;
-		private LayoutInflater mInflator;
-
-		public LeDeviceListAdapter() {
-			super();
-			mLeDevices = new ArrayList<BluetoothDevice>();
-			mInflator =  ((Activity) mainContext).getLayoutInflater();
-		}
-
-		public void addDevice(BluetoothDevice device) {
-			if (!mLeDevices.contains(device)) {
-				mLeDevices.add(device);
-			}
-		}
-
-		public BluetoothDevice getDevice(int position) {
-			return mLeDevices.get(position);
-		}
-
-		public void clear() {
-			mLeDevices.clear();
-		}
-
-		@Override
-		public int getCount() {
-			return mLeDevices.size();
-		}
-
-		@Override
-		public Object getItem(int i) {
-			return mLeDevices.get(i);
-		}
-
-		@Override
-		public long getItemId(int i) {
-			return i;
-		}
-
-		@SuppressLint("MissingPermission")
-		@Override
-		public View getView(int i, View view, ViewGroup viewGroup) {
-			ViewHolder viewHolder;
-			// General ListView optimization code.
-			if (view == null) {
-				view = mInflator.inflate(R.layout.listitem_device, null);
-				viewHolder = new ViewHolder();
-				viewHolder.deviceAddress = (TextView) view
-						.findViewById(R.id.device_address);
-				viewHolder.deviceName = (TextView) view
-						.findViewById(R.id.device_name);
-				System.out.println("mInflator.inflate  getView");
-				view.setTag(viewHolder);
-			} else {
-				viewHolder = (ViewHolder) view.getTag();
-			}
-
-			BluetoothDevice device = mLeDevices.get(i);
-			final String deviceName = device.getName();
-			if (deviceName != null && deviceName.length() > 0)
-				viewHolder.deviceName.setText(deviceName);
-			else
-				viewHolder.deviceName.setText(R.string.unknown_device);
-			viewHolder.deviceAddress.setText(device.getAddress());
-
-			return view;
-		}
-	}
-
-	/**
-	 *
-	 * @param requestCode
-	 * @param permissionsResult
-	 */
-		public void request(int requestCode, OnPermissionsResult permissionsResult){
-	        if(!checkPermissionsAll()){
-				requestPermissionAll(requestCode, permissionsResult);
-			}
-		}
-	/**
-	 * \u00e5\u0088\u00a4\u00e6\u0096\u00ad\u00e5\u00bd\u0093\u00e4\u00b8\u00aa\u00e6\u009d\u0083\u00e9\u0099\u0090
-	 * @param permissions
-	 * @return
-	 */
-	protected boolean checkPermissions(String permissions){
-    	if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-    		int check = mainContext.checkSelfPermission(permissions);
-    		return check == PackageManager.PERMISSION_GRANTED;
-		}
-    	return false;
-	}
-
-	/**
-	 * \u00e5\u0088\u00a4\u00e6\u0096\u00ad\u00e6\u0089\u0080\u00e6\u009c\u0089\u00e6\u009d\u0e99\u00e9\u0099\u0090
-	 * @return
-	 */
-	protected boolean checkPermissionsAll(){
-		mPerList.clear();
-		for(int i = 0; i < mStrPermission.length; i++ ){
-			boolean check = checkPermissions(mStrPermission[i]);
-			if(!check){
-                 mPerList.add(mStrPermission[i]);
-			}
-		}
-		return mPerList.size() > 0 ? false : true;
-	}
-
-	/**
-	 * \u00e8\u00af\u00b7\u00e6\u00b1\u0082\u00e5\u008d\u0095\u00e4\u00b8\u00aa\u00e6\u009d\u0083\u00e9\u0099\u0090
-	 * @param mPermissions
-	 * @param requestCode
-	 */
-	protected void requestPermission(String[] mPermissions, int requestCode){
-         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-			((Activity) mainContext).requestPermissions(mPermissions,requestCode);
-		 }
-	}
-
-	/**
-	 *\u00e8\u00af\u00b7\u00e6\u00b1\u0082\u00e6\u009d\u0083\u00e9\u0099\u0090
-	 * @param requestCode
-	 */
-	public void requestPermissionAll(int requestCode, OnPermissionsResult permissionsResult){
-		this.permissionsResult = permissionsResult;
-		requestPermission((String[]) mPerList.toArray(new String[mPerList.size()]),requestCode);
-	}
-
-
-
-    public void onRequestPermissionsResultProcess(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        mPerNoList.clear();
-        if (requestCode == this.requestCode && permissionsResult != null) {
-            for (int i = 0; i < grantResults.length; i++) {
-                if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                    mPerNoList.add(permissions[i]);
-                }
-            }
-            if (mPerNoList.size() == 0) {
-                permissionsResult.OnSuccess();
-            } else {
-                permissionsResult.OnFail(mPerNoList);
-            }
-        }
-    }
-
 	public interface OnPermissionsResult{
 		void OnSuccess();
 		void OnFail(List<String> noPermissions);

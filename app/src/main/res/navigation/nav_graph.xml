@@ -11,4 +11,10 @@
         android:label="NoNo Controller"
         tools:layout="@layout/fragment_main_unified" />
 
+    <fragment
+        android:id="@+id/navigation_music_list"
+        android:name="com.hzc.nonocontroller.ui.MusicListFragment"
+        android:label="Music"
+        tools:layout="@layout/fragment_music_list" />
+
 </navigation>

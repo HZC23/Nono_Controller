@@ -135,6 +135,13 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="@{`Connexion: ` + viewModel.connectionState.toString()}"
+                        tools:text="Connexion: isConnected"
+                        android:textAppearance="?attr/textAppearanceBody1"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         android:text="@{`Etat: ` + viewModel.telemetry.state}"
                         tools:text="Etat: IDLE"
                         android:textAppearance="?attr/textAppearanceBody1"/>
@@ -227,6 +234,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
                     android:src="@drawable/ic_baseline_explore_24"
+                    app:tint="?attr/colorPrimary"
                     android:onClick="@{() -> viewModel.onSmartAvoidanceClicked()}"/>
 
                 <ImageButton
@@ -237,6 +245,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
                     android:src="@drawable/ic_baseline_center_focus_strong_24"
+                    app:tint="?attr/colorPrimary"
                     />
 
                 <ImageButton
@@ -247,6 +256,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
                     android:src="@drawable/ic_baseline_visibility_24"
+                    app:tint="?attr/colorPrimary"
                     android:onClick="@{() -> viewModel.onSentryModeClicked()}"/>
 
                 <ImageButton
@@ -257,6 +267,7 @@
                     android:layout_columnWeight="1"
                     android:layout_margin="4dp"
                     android:src="@drawable/ic_baseline_settings_24"
+                    app:tint="?attr/colorPrimary"
                     android:onClick="@{() -> viewModel.onCalibrateCompassClicked()}"/>
 
             </GridLayout>

@@ -18,6 +18,12 @@ public final class Constants {
     public static final String ACTION_COMPASS_OFFSET = "COMPASS_OFFSET";
     public static final String ACTION_CALIBRATE = "CALIBRATE";
     public static final String ACTION_LCD = "LCD";
+    public static final String ACTION_LIST_MUSIC = "LIST_MUSIC";
+    public static final String ACTION_PLAY_MUSIC = "PLAY_MUSIC";
+
+    // Response prefixes
+    public static final String RSP_PREFIX = "RSP:";
+    public static final String RSP_MUSIC_FILE_PREFIX = RSP_PREFIX + "MUSIC_FILE:";
 
     // Serial Monitor
     public static final int MAX_SERIAL_MONITOR_LINES = 200;

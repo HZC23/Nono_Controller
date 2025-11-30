@@ -26,7 +26,7 @@ public class CalibrationActivity extends AppCompatActivity implements BlunoLibra
 
         ActivityCalibrationBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_calibration);
 
-        blunoLibrary = BlunoLibrary.getInstance(this, this);
+        blunoLibrary = BleManager.getInstance();
 
         CalibrationViewModelFactory factory = new CalibrationViewModelFactory(blunoLibrary);
         viewModel = new ViewModelProvider(this, factory).get(CalibrationViewModel.class);
@@ -40,20 +40,19 @@ public class CalibrationActivity extends AppCompatActivity implements BlunoLibra
     @Override
     protected void onResume() {
         super.onResume();
-        blunoLibrary.setDelegate(this);
-        blunoLibrary.onResumeProcess();
+        BleManager.registerDelegate(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        blunoLibrary.onPauseProcess();
+        BleManager.unregisterDelegate(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        blunoLibrary.onDestroyProcess();
+        // No longer call blunoLibrary.onDestroyProcess();
     }
 
     @Override

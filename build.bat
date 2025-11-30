@@ -1,0 +1,1 @@
+"C:\Users\Hadrien\Documents\Arduino\NoNo\Nono Controller\gradlew.bat" build & adb install "C:\Users\Hadrien\Documents\Arduino\NoNo\Nono Controller\app\build\outputs\apk\debug\GenerateAPK_debug_v1.0.apk"   

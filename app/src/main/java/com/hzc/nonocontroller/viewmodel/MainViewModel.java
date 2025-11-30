@@ -19,10 +19,13 @@ import com.hzc.nonocontroller.BlunoLibrary;
 import com.hzc.nonocontroller.data.TelemetryData;
 import androidx.lifecycle.Observer;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
 import static com.hzc.nonocontroller.Constants.*;
+
+import com.hzc.nonocontroller.util.SettingsManager;
 
 public class MainViewModel extends ViewModel {
 
@@ -30,6 +33,7 @@ public class MainViewModel extends ViewModel {
     private final Observer<TelemetryData> telemetryObserver;
     private final Application application; // Storing application context
     private final Vibrator vibrator;
+    private final SettingsManager settingsManager;
 
     // Command Queueing
     private final Queue<String> commandQueue = new LinkedList<>();
@@ -50,10 +54,14 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<Integer> _speed = new MutableLiveData<>(150);
     public final LiveData<Integer> speed = _speed;
 
-    public MainViewModel(Application application, BlunoLibrary blunoLibrary) {
+    private final MutableLiveData<LinkedList<String>> _musicFiles = new MutableLiveData<>(new LinkedList<>());
+    public final LiveData<LinkedList<String>> musicFiles = _musicFiles;
+
+    public MainViewModel(Application application, BlunoLibrary blunoLibrary, SettingsManager settingsManager) {
         super();
         this.application = application;
         this.blunoLibrary = blunoLibrary;
+        this.settingsManager = settingsManager;
         this.vibrator = (Vibrator) application.getSystemService(Context.VIBRATOR_SERVICE);
         // Observe the telemetry data to update UI visibility
         telemetryObserver = this::updateUIVisibilityFromState;
@@ -149,8 +157,26 @@ public class MainViewModel extends ViewModel {
     // --- Manual Control ---
     public void onDirectionalButton(String direction) {
         performHapticFeedback();
-        sendCommand(buildCommand(ACTION_MOVE, directionToValue(direction)));
+        String finalDirection = direction;
+        if (settingsManager.isInvertLayout()) {
+            switch (direction) {
+                case DIRECTION_UP:
+                    finalDirection = DIRECTION_DOWN;
+                    break;
+                case DIRECTION_DOWN:
+                    finalDirection = DIRECTION_UP;
+                    break;
+                case DIRECTION_LEFT:
+                    finalDirection = DIRECTION_RIGHT;
+                    break;
+                case DIRECTION_RIGHT:
+                    finalDirection = DIRECTION_LEFT;
+                    break;
+            }
+        }
+        sendCommand(buildCommand(ACTION_MOVE, directionToValue(finalDirection)));
     }
+
 
     public void onDirectionalButtonReleased() {
         performHapticFeedback();
@@ -215,6 +241,15 @@ public class MainViewModel extends ViewModel {
     // --- Accessories & System ---
     public void onLightSwitched(boolean isChecked) {
         performHapticFeedback();
+
+        // Remove any pending light commands to avoid flooding the queue
+        Iterator<String> iterator = commandQueue.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().startsWith(ACTION_LIGHT)) {
+                iterator.remove();
+            }
+        }
+
         if (isChecked) {
             sendCommand(buildCommand(ACTION_LIGHT, VALUE_ON));
         } else {
@@ -261,7 +296,7 @@ public class MainViewModel extends ViewModel {
     }
 
     // --- Private Helper ---
-    private void sendCommand(String command) {
+    public void sendCommand(String command) {
         commandQueue.add(command);
         attemptToSendNextCommand();
     }
@@ -276,6 +311,19 @@ public class MainViewModel extends ViewModel {
         } else if (_connectionState.getValue() != BlunoLibrary.connectionStateEnum.isConnected && !commandQueue.isEmpty()) {
             Log.w("MainViewModel", "Not connected, commands queued: " + commandQueue.size());
         }
+    }
+
+    public void addMusicFile(String filename) {
+        LinkedList<String> currentList = _musicFiles.getValue();
+        if (currentList == null) {
+            currentList = new LinkedList<>();
+        }
+        currentList.add(filename);
+        _musicFiles.postValue(currentList);
+    }
+
+    public void clearMusicFiles() {
+        _musicFiles.postValue(new LinkedList<>());
     }
 
     private void performHapticFeedback() {

@@ -10,7 +10,7 @@
         android:textColor="?attr/colorOnBackground"/>
     <TextView
         android:id="@+id/device_address"
-        android:layout_width="match_match"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="12sp"
         android:textColor="?attr/colorOnBackground"/>
