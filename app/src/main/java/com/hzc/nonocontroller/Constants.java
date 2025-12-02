@@ -18,9 +18,7 @@ public final class Constants {
     public static final String ACTION_COMPASS_OFFSET = "COMPASS_OFFSET";
     public static final String ACTION_CALIBRATE = "CALIBRATE";
     public static final String ACTION_LCD = "LCD";
-    public static final String ACTION_TURN = "TURN";
     public static final String ACTION_ANIM = "ANIM";
-    public static final String ACTION_SET = "SET";
     public static final String ACTION_LIST_MUSIC = "LIST_MUSIC";
     public static final String ACTION_PLAY_MUSIC = "PLAY_MUSIC";
 
@@ -48,11 +46,6 @@ public final class Constants {
     // Values for ANIM action
     public static final String VALUE_YES = "YES";
     public static final String VALUE_NO = "NO";
-
-    // Values for SET action
-    public static final String VALUE_SPEED_AVG = "SPEED_AVG";
-    public static final String VALUE_SPEED_SLOW = "SPEED_SLOW";
-    public static final String VALUE_CONTROL_INVERTED = "CONTROL_INVERTED";
 
     // Values for SCAN action
     public static final String VALUE_START = "START";

@@ -282,29 +282,9 @@ public class MainViewModel extends ViewModel {
         }
     }
 
-    public void onTurnClicked(float angle) {
-        performHapticFeedback();
-        sendCommand(buildCommand(ACTION_TURN, angle));
-    }
-
     public void onAnimClicked(String anim) {
         performHapticFeedback();
         sendCommand(buildCommand(ACTION_ANIM, anim));
-    }
-
-    public void onSetSpeedAvgClicked(int speed) {
-        performHapticFeedback();
-        sendCommand(buildCommand(ACTION_SET, VALUE_SPEED_AVG + ":" + speed));
-    }
-
-    public void onSetSpeedSlowClicked(int speed) {
-        performHapticFeedback();
-        sendCommand(buildCommand(ACTION_SET, VALUE_SPEED_SLOW + ":" + speed));
-    }
-
-    public void onSetControlInvertedClicked(boolean inverted) {
-        performHapticFeedback();
-        sendCommand(buildCommand(ACTION_SET, VALUE_CONTROL_INVERTED + ":" + inverted));
     }
 
     public void onModeManualClicked() {
