@@ -1,7 +1,6 @@
 package com.hzc.nonocontroller.ui.unified;
 
 import android.app.AlertDialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,23 +9,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.hzc.nonocontroller.BlunoLibrary;
-import com.hzc.nonocontroller.CalibrationActivity;
 import com.hzc.nonocontroller.MainActivity;
 import com.hzc.nonocontroller.R;
 import com.hzc.nonocontroller.databinding.FragmentMainUnifiedBinding;
 import com.hzc.nonocontroller.util.SettingsManager;
 import com.hzc.nonocontroller.viewmodel.MainViewModel;
-
-import com.hzc.nonocontroller.Constants;
-import android.view.MotionEvent;
-import android.widget.ImageButton;
 
 public class UnifiedFragment extends Fragment {
 
@@ -40,7 +33,7 @@ public class UnifiedFragment extends Fragment {
                 new ViewModelProvider(requireActivity()).get(MainViewModel.class);
 
         binding = FragmentMainUnifiedBinding.inflate(inflater, container, false);
-        binding.setLifecycleOwner(getViewLifecycleOwner());
+        binding.setLifecycleOwner(this);
         binding.setViewModel(mainViewModel);
 
         blunoLibrary = ((MainActivity) requireActivity()).getBlunoLibrary();
@@ -61,38 +54,6 @@ public class UnifiedFragment extends Fragment {
         }
 
         return binding.getRoot();
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        setupListeners(binding);
-    }
-
-    private void setupListeners(FragmentMainUnifiedBinding binding) {
-        // D-Pad from controls_panel.xml (now directly in fragment_control.xml)
-        setupDirectionalButton(binding.buttonUp, Constants.DIRECTION_UP);
-        setupDirectionalButton(binding.buttonDown, Constants.DIRECTION_DOWN);
-        setupDirectionalButton(binding.buttonLeft, Constants.DIRECTION_LEFT);
-        setupDirectionalButton(binding.buttonRight, Constants.DIRECTION_RIGHT);
-    }
-
-    private void setupDirectionalButton(ImageButton button, final String direction) {
-        button.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        mainViewModel.onDirectionalButton(direction);
-                        return true; // Consume the event
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL:
-                        mainViewModel.onDirectionalButtonReleased();
-                        return true; // Consume the event
-                }
-                return false;
-            }
-        });
     }
 
     private void invertLayout() {
@@ -136,10 +97,8 @@ public class UnifiedFragment extends Fragment {
             Toast.makeText(getContext(), "Console coming soon!", Toast.LENGTH_SHORT).show();
         });
 
-// ... inside showSettingsDialog method
         calibrationButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), CalibrationActivity.class);
-            getActivity().startActivity(intent);
+            Toast.makeText(getContext(), "Calibration page coming soon!", Toast.LENGTH_SHORT).show();
         });
 
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
