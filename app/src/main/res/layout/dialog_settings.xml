@@ -21,13 +21,4 @@
         android:text="Mode Sombre"
         android:padding="12dp"
         android:textAppearance="?attr/textAppearanceSubtitle1"/>
-
-    <com.google.android.material.switchmaterial.SwitchMaterial
-        android:id="@+id/settings_invert_layout_switch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Inverser les contrôles"
-        android:padding="12dp"
-        android:textAppearance="?attr/textAppearanceSubtitle1"/>
-
 </LinearLayout>

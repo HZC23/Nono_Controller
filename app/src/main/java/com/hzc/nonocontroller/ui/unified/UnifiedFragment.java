@@ -98,14 +98,12 @@ public class UnifiedFragment extends Fragment {
         });
 
         mainViewModel.telemetry.observe(getViewLifecycleOwner(), telemetryData -> {
-            // This is a workaround to force the UI to update.
-            // The data binding should handle this automatically, but for some reason it's not.
-            binding.telemetryStateValue.setText(telemetryData.getState());
-            binding.telemetryHeadingValue.setText(String.valueOf(telemetryData.getHeading()));
-            binding.telemetryDistanceUsValue.setText(String.valueOf(telemetryData.getDistance()));
-            binding.telemetryDistanceLaserValue.setText(String.valueOf(telemetryData.getDistanceLaser()));
-            binding.telemetryBatteryValue.setText(String.valueOf(telemetryData.getBattery()));
-            binding.telemetrySpeedTargetValue.setText(String.valueOf(telemetryData.getSpeedTarget()));
+            binding.telemetryStateValue.setText("Etat: " + telemetryData.getState());
+            binding.telemetryHeadingValue.setText("Cap: " + telemetryData.getHeading() + "°");
+            binding.telemetryDistanceUsValue.setText("Distance US: " + telemetryData.getDistance() + " cm");
+            binding.telemetryDistanceLaserValue.setText("Distance Laser: " + telemetryData.getDistanceLaser() + " mm");
+            binding.telemetryBatteryValue.setText("Batterie: " + telemetryData.getBattery() + "%");
+            binding.telemetrySpeedTargetValue.setText("Vitesse Cible: " + telemetryData.getSpeedTarget());
         });
 
         mainViewModel.connectionState.observe(getViewLifecycleOwner(), state -> {
@@ -125,33 +123,7 @@ public class UnifiedFragment extends Fragment {
             }
         });
 
-        SettingsManager settingsManager = new SettingsManager(requireContext());
-        if (settingsManager.isInvertLayout()) {
-            invertLayout();
-        }
-
         return binding.getRoot();
-    }
-
-    private void invertLayout() {
-        androidx.constraintlayout.widget.ConstraintLayout constraintLayout = binding.rootLayout;
-        androidx.constraintlayout.widget.ConstraintSet constraintSet = new androidx.constraintlayout.widget.ConstraintSet();
-        constraintSet.clone(constraintLayout);
-        
-        // Clear existing constraints for dpad_section and actions_section
-        constraintSet.clear(R.id.dpad_section, androidx.constraintlayout.widget.ConstraintSet.START);
-        constraintSet.clear(R.id.dpad_section, androidx.constraintlayout.widget.ConstraintSet.END);
-        constraintSet.clear(R.id.actions_section, androidx.constraintlayout.widget.ConstraintSet.START);
-        constraintSet.clear(R.id.actions_section, androidx.constraintlayout.widget.ConstraintSet.END);
-        
-        // Re-apply constraints to swap them
-        constraintSet.connect(R.id.dpad_section, androidx.constraintlayout.widget.ConstraintSet.START, R.id.telemetry_section, androidx.constraintlayout.widget.ConstraintSet.END);
-        constraintSet.connect(R.id.dpad_section, androidx.constraintlayout.widget.ConstraintSet.END, androidx.constraintlayout.widget.ConstraintSet.PARENT_ID, androidx.constraintlayout.widget.ConstraintSet.END);
-        
-        constraintSet.connect(R.id.actions_section, androidx.constraintlayout.widget.ConstraintSet.START, androidx.constraintlayout.widget.ConstraintSet.PARENT_ID, androidx.constraintlayout.widget.ConstraintSet.START);
-        constraintSet.connect(R.id.actions_section, androidx.constraintlayout.widget.ConstraintSet.END, R.id.telemetry_section, androidx.constraintlayout.widget.ConstraintSet.START);
-
-        constraintSet.applyTo(constraintLayout);
     }
 
     private void showSettingsDialog() {
@@ -162,11 +134,9 @@ public class UnifiedFragment extends Fragment {
 
         TextView consoleButton = dialogView.findViewById(R.id.settings_console_button);
         com.google.android.material.switchmaterial.SwitchMaterial darkModeSwitch = dialogView.findViewById(R.id.settings_dark_mode_switch);
-        com.google.android.material.switchmaterial.SwitchMaterial invertLayoutSwitch = dialogView.findViewById(R.id.settings_invert_layout_switch);
 
         SettingsManager settingsManager = new SettingsManager(requireContext());
         darkModeSwitch.setChecked(settingsManager.isDarkMode());
-        invertLayoutSwitch.setChecked(settingsManager.isInvertLayout());
 
 
         consoleButton.setOnClickListener(v -> {
@@ -175,11 +145,6 @@ public class UnifiedFragment extends Fragment {
 
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             settingsManager.setDarkMode(isChecked);
-            requireActivity().recreate();
-        });
-
-        invertLayoutSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            settingsManager.setInvertLayout(isChecked);
             requireActivity().recreate();
         });
 
