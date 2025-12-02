@@ -1,9 +1,21 @@
 package com.hzc.nonocontroller;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.bluetooth.BluetoothDevice;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Toast;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +41,8 @@ public class MainActivity extends AppCompatActivity implements BlunoLibraryDeleg
     private MainViewModel viewModel;
     private BlunoLibrary blunoLibrary;
     private SettingsManager settingsManager;
+    private LeDeviceListAdapter mLeDeviceListAdapter; // Declare LeDeviceListAdapter
+    private AlertDialog mScanDeviceDialog; // Declare AlertDialog
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements BlunoLibraryDeleg
         blunoLibrary.request(1000, new BlunoLibrary.OnPermissionsResult() {
             @Override
             public void OnSuccess() {
-                Toast.makeText(MainActivity.this, "Permissions granted", Toast.LENGTH_SHORT).show();
+                // Permissions granted
             }
 
             @Override
@@ -120,34 +134,171 @@ public class MainActivity extends AppCompatActivity implements BlunoLibraryDeleg
     @Override
     public void onSerialReceived(String theString) {
         Log.d("MainActivity", "Serial received: " + theString);
-        // Update the serial monitor first
-        String currentLog = viewModel.serialMonitor.getValue() != null ? viewModel.serialMonitor.getValue() : "";
-        viewModel.updateSerialMonitor(currentLog + theString.trim() + "\n");
+        viewModel.updateSerialMonitor(theString);
 
-        // Parse the JSON telemetry data
         try {
             JSONObject json = new JSONObject(theString.trim());
-
-            // Create a new object for the update to ensure LiveData triggers reliably.
-            TelemetryData newTelemetry = new TelemetryData();
-
-            // Populate the new object directly from the JSON data.
-            if (json.has("state")) newTelemetry.setState(json.getString("state"));
-            if (json.has("heading")) newTelemetry.setHeading(json.getInt("heading"));
-            if (json.has("distance")) newTelemetry.setDistance(json.getInt("distance"));
-            if (json.has("distanceLaser")) newTelemetry.setDistanceLaser(json.getInt("distanceLaser"));
-            if (json.has("battery")) newTelemetry.setBattery(json.getInt("battery"));
-            if (json.has("speedTarget")) newTelemetry.setSpeedTarget(json.getInt("speedTarget"));
-            // speedCurrent is not sent by the robot, so we don't parse it.
-
-            // Update the ViewModel with the new data object.
-            viewModel.updateTelemetry(newTelemetry);
-            Log.d("MainActivity", "Telemetry updated: " + newTelemetry.getState());
-
+            Boolean isCalibrating = viewModel.isCalibrating.getValue();
+            if (isCalibrating != null && isCalibrating) {
+                if (json.has("heading")) {
+                    viewModel.updateHeading(json.getInt("heading"));
+                }
+            } else {
+                TelemetryData newTelemetry = new TelemetryData();
+                if (json.has("state")) newTelemetry.setState(json.getString("state"));
+                if (json.has("heading")) newTelemetry.setHeading(json.getInt("heading"));
+                if (json.has("distance")) newTelemetry.setDistance(json.getInt("distance"));
+                if (json.has("distanceLaser")) newTelemetry.setDistanceLaser(json.getInt("distanceLaser"));
+                if (json.has("battery")) newTelemetry.setBattery(json.getInt("battery"));
+                if (json.has("speedTarget")) newTelemetry.setSpeedTarget(json.getInt("speedTarget"));
+                viewModel.updateTelemetry(newTelemetry);
+                Log.d("MainActivity", "Telemetry updated: " + newTelemetry.getState());
+            }
         } catch (JSONException e) {
             Log.e("MainActivity", "Failed to parse JSON: " + theString, e);
-            // This is expected if the serial string is not a JSON object (e.g., a debug message)
-            // Do nothing with it for telemetry.
         }
+    }
+
+    @Override
+    public void onScanDialogRequested() {
+        // Initializes list view adapter.
+        mLeDeviceListAdapter = new LeDeviceListAdapter();
+        // Initializes and show the scan Device Dialog
+        mScanDeviceDialog = new AlertDialog.Builder(this) // Use 'this' (Activity context)
+                .setTitle("BLE Device Scan...")
+                .setAdapter(mLeDeviceListAdapter, new DialogInterface.OnClickListener() {
+
+                    @SuppressLint("MissingPermission")
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        final BluetoothDevice device = mLeDeviceListAdapter.getDevice(which);
+                        if (device == null)
+                            return;
+
+                        blunoLibrary.scanLeDevice(false); // Stop scanning
+
+                        if(device.getName()==null || device.getAddress()==null)
+                        {
+                            viewModel.setConnectionState(blunoLibrary.mConnectionState); // Let the BlunoLibrary manage its state and notify its delegate.
+                        }
+                        else{
+                            Log.i("MainActivity", "onListItemClick " + device.getName());
+                            Log.i("MainActivity", "Device Name:"+device.getName() + "   " + "Device Address:" + device.getAddress());
+
+                            // These are now handled by BlunoLibrary.connect
+                            // blunoLibrary.mDeviceName=device.getName();
+                            // blunoLibrary.mDeviceAddress=device.getAddress();
+
+                            if (blunoLibrary.connect(device.getAddress())) { // Pass address to connect
+                                Log.d("MainActivity", "Connect request success");
+                                viewModel.setConnectionState(blunoLibrary.mConnectionState); // Let the BlunoLibrary manage its state and notify its delegate.
+                                // mHandler.postDelayed(mConnectingOverTimeRunnable, 10000); // Handled internally by BlunoLibrary if needed
+                            }
+                            else {
+                                Log.d("MainActivity", "Connect request fail");
+                                viewModel.setConnectionState(blunoLibrary.mConnectionState); // Let the BlunoLibrary manage its state and notify its delegate.
+                            }
+                        }
+                        mScanDeviceDialog.dismiss();
+                    }
+                })
+                .setOnCancelListener(new DialogInterface.OnCancelListener() {
+
+                    @SuppressLint("MissingPermission")
+                    @Override
+                    public void onCancel(DialogInterface arg0) {
+                        Log.i("MainActivity", "Scan dialog cancelled");
+                        blunoLibrary.scanLeDevice(false); // Stop scanning
+                        viewModel.setConnectionState(BlunoLibrary.connectionStateEnum.isToScan); // Explicitly set state
+                        mScanDeviceDialog.dismiss();
+                    }
+                }).create();
+        mScanDeviceDialog.show();
+        blunoLibrary.scanLeDevice(true); // Start scanning
+    }
+
+
+    private class LeDeviceListAdapter extends BaseAdapter {
+        private ArrayList<BluetoothDevice> mLeDevices;
+        private LayoutInflater mInflator;
+
+        public LeDeviceListAdapter() {
+            super();
+            mLeDevices = new ArrayList<BluetoothDevice>();
+            mInflator = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        }
+
+        public void addDevice(BluetoothDevice device) {
+            if (!mLeDevices.contains(device)) {
+                mLeDevices.add(device);
+            }
+        }
+
+        public BluetoothDevice getDevice(int position) {
+            return mLeDevices.get(position);
+        }
+
+        public void clear() {
+            mLeDevices.clear();
+        }
+
+        @Override
+        public int getCount() {
+            return mLeDevices.size();
+        }
+
+        @Override
+        public Object getItem(int i) {
+            return mLeDevices.get(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @SuppressLint("MissingPermission")
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup) {
+            ViewHolder viewHolder;
+            // General ListView optimization code.
+            if (view == null) {
+                view = mInflator.inflate(R.layout.listitem_device, null);
+                viewHolder = new ViewHolder();
+                viewHolder.deviceAddress = (TextView) view
+                        .findViewById(R.id.device_address);
+                viewHolder.deviceName = (TextView) view
+                        .findViewById(R.id.device_name);
+                Log.i("MainActivity", "mInflator.inflate  getView");
+                view.setTag(viewHolder);
+            } else {
+                viewHolder = (ViewHolder) view.getTag();
+            }
+
+            BluetoothDevice device = mLeDevices.get(i);
+            final String deviceName = device.getName();
+            if (deviceName != null && deviceName.length() > 0)
+                viewHolder.deviceName.setText(deviceName);
+            else
+                viewHolder.deviceName.setText(R.string.unknown_device);
+            viewHolder.deviceAddress.setText(device.getAddress());
+
+            return view;
+        }
+    }
+
+    static class ViewHolder {
+        TextView deviceName;
+        TextView deviceAddress;
+    }
+
+    @Override
+    public void onDeviceDiscovered(final BluetoothDevice device) {
+        runOnUiThread(() -> {
+            if (mLeDeviceListAdapter != null) {
+                mLeDeviceListAdapter.addDevice(device);
+                mLeDeviceListAdapter.notifyDataSetChanged();
+            }
+        });
     }
 }

@@ -14,6 +14,6 @@
         android:title="Telemetry"/>
     <item
         android:id="@+id/navigation_music_list"
-        android:icon="@drawable/ic_baseline_keyboard_arrow_down_24"
+        android:icon="@drawable/ic_play_arrow"
         android:title="Music"/>
 </menu>

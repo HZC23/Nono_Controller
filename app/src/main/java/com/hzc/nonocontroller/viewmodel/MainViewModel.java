@@ -50,6 +50,15 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<Integer> _speed = new MutableLiveData<>(150);
     public final LiveData<Integer> speed = _speed;
 
+    private final MutableLiveData<LinkedList<String>> _musicFiles = new MutableLiveData<>(new LinkedList<>());
+    public final LiveData<LinkedList<String>> musicFiles = _musicFiles;
+
+    private final MutableLiveData<Integer> _heading = new MutableLiveData<>(0);
+    public final LiveData<Integer> heading = _heading;
+
+    private final MutableLiveData<Boolean> _isCalibrating = new MutableLiveData<>(false);
+    public final LiveData<Boolean> isCalibrating = _isCalibrating;
+
     public MainViewModel(Application application, BlunoLibrary blunoLibrary) {
         super();
         this.application = application;
@@ -144,6 +153,7 @@ public class MainViewModel extends ViewModel {
     public void onStopButtonClicked() {
         performHapticFeedback();
         sendCommand(buildCommand(ACTION_MOVE, VALUE_STOP));
+        sendCommand(buildCommand(ACTION_MODE, VALUE_MANUAL));
     }
 
     // --- Manual Control ---
@@ -247,6 +257,18 @@ public class MainViewModel extends ViewModel {
         sendCommand(buildCommand(ACTION_CALIBRATE, VALUE_COMPASS));
     }
 
+    public void onStartCalibrationClicked() {
+        sendCommand("CMD:CALIBRATE:COMPASS\n");
+    }
+
+    public void updateHeading(int newHeading) {
+        _heading.postValue(newHeading);
+    }
+
+    public void setCalibrating(boolean isCalibrating) {
+        _isCalibrating.postValue(isCalibrating);
+    }
+
 
     public void onSetCompassOffsetClicked(float offset) {
         performHapticFeedback();
@@ -260,8 +282,39 @@ public class MainViewModel extends ViewModel {
         }
     }
 
+    public void onTurnClicked(float angle) {
+        performHapticFeedback();
+        sendCommand(buildCommand(ACTION_TURN, angle));
+    }
+
+    public void onAnimClicked(String anim) {
+        performHapticFeedback();
+        sendCommand(buildCommand(ACTION_ANIM, anim));
+    }
+
+    public void onSetSpeedAvgClicked(int speed) {
+        performHapticFeedback();
+        sendCommand(buildCommand(ACTION_SET, VALUE_SPEED_AVG + ":" + speed));
+    }
+
+    public void onSetSpeedSlowClicked(int speed) {
+        performHapticFeedback();
+        sendCommand(buildCommand(ACTION_SET, VALUE_SPEED_SLOW + ":" + speed));
+    }
+
+    public void onSetControlInvertedClicked(boolean inverted) {
+        performHapticFeedback();
+        sendCommand(buildCommand(ACTION_SET, VALUE_CONTROL_INVERTED + ":" + inverted));
+    }
+
+    public void onModeManualClicked() {
+        performHapticFeedback();
+        sendCommand(buildCommand(ACTION_MODE, VALUE_MANUAL));
+    }
+
+
     // --- Private Helper ---
-    private void sendCommand(String command) {
+    public void sendCommand(String command) {
         commandQueue.add(command);
         attemptToSendNextCommand();
     }
@@ -278,7 +331,20 @@ public class MainViewModel extends ViewModel {
         }
     }
 
-    private void performHapticFeedback() {
+    public void addMusicFile(String filename) {
+        LinkedList<String> currentList = _musicFiles.getValue();
+        if (currentList == null) {
+            currentList = new LinkedList<>();
+        }
+        currentList.add(filename);
+        _musicFiles.postValue(currentList);
+    }
+
+    public void clearMusicFiles() {
+        _musicFiles.postValue(new LinkedList<>());
+    }
+
+    public void performHapticFeedback() {
         if (vibrator != null && vibrator.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));

@@ -23,9 +23,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAlignment="center"
-            android:padding="4dp"
+            android:padding="1dp"
             android:background="?android:attr/windowBackground"
-            android:text="Disconnected"
             android:layout_alignParentTop="true"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -41,20 +40,13 @@
 
                     android:layout_height="match_parent"
 
-                    android:layout_above="@+id/nav_view"
                     android:layout_below="@+id/text_connection_status"
 
                     app:defaultNavHost="true"
 
                     app:navGraph="@navigation/nav_graph" />
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/nav_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:background="?android:attr/windowBackground"
-            app:menu="@menu/bottom_nav_menu" />
+
 
     </RelativeLayout>
 </layout>

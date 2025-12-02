@@ -37,7 +37,7 @@ public abstract  class BlunoLibrary  extends Activity{
 
 	private Context mainContext=this;
 
-	//需要的申请权限
+	//要权
 	private  String [] mStrPermission = {
 			Manifest.permission.ACCESS_FINE_LOCATION
 	};
@@ -164,7 +164,7 @@ public abstract  class BlunoLibrary  extends Activity{
 					mDeviceName=device.getName().toString();
 					mDeviceAddress=device.getAddress().toString();
 
-		        	if (mBluetoothLeService.connect(mDeviceAddress)) {
+			        	if (mBluetoothLeService.connect(mDeviceAddress)) {
 				        Log.d(TAG, "Connect request success");
 			        	mConnectionState=connectionStateEnum.isConnecting;
 			        	onConectionStateChange(mConnectionState);
@@ -211,7 +211,7 @@ public abstract  class BlunoLibrary  extends Activity{
 		}
 		
 		
-	    mainContext.registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+    	mainContext.registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 
 	}
     
@@ -587,7 +587,7 @@ public abstract  class BlunoLibrary  extends Activity{
 	}
 
 	/**
-	 *
+	 * 
 	 * @param requestCode
 	 * @param permissionsResult
 	 */
@@ -598,7 +598,7 @@ public abstract  class BlunoLibrary  extends Activity{
 	}
 
 	/**
-	 * 判断请求单个权限
+	 * 卸权
 	 * @param permissions
 	 * @return
 	 */
@@ -611,7 +611,7 @@ public abstract  class BlunoLibrary  extends Activity{
 	}
 
 	/**
-	 * 判断请求权限组
+	 * 卸权
 	 * @return
 	 */
 	protected boolean checkPermissionsAll(){
@@ -626,7 +626,7 @@ public abstract  class BlunoLibrary  extends Activity{
 	}
 
 	/**
-	 * 请求单个权限
+	 * 蟮ジ权
 	 * @param mPermissions
 	 * @param requestCode
 	 */
@@ -637,7 +637,7 @@ public abstract  class BlunoLibrary  extends Activity{
 	}
 
 	/**
-	 *请求权限
+	 * 权
 	 * @param requestCode
 	 */
 	protected void requestPermissionAll(int requestCode, OnPermissionsResult permissionsResult){
@@ -652,14 +652,15 @@ public abstract  class BlunoLibrary  extends Activity{
 	    		for(int i = 0; i < grantResults.length; i++){
 	    			if(grantResults[i] == PackageManager.PERMISSION_DENIED){
 	    				System.out.println(permissions[i]);
-	    				//如果有失败
+	    				//失
                         mPerNoList.add(permissions[i]);
 					}
 				}
 	    		if(permissionsResult != null){
 	    			if(mPerNoList.size() == 0){
 	    				permissionsResult.OnSuccess();
-					}else {
+					}
+                                else {
 	    				permissionsResult.OnFail(mPerNoList);
 					}
 				}

@@ -26,6 +26,8 @@ import android.content.pm.PackageManager;
 import android.provider.Settings;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
+import androidx.core.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -63,7 +65,7 @@ public class BlunoLibrary {
 	private String[] mStrPermission;
 
 	private void initializePermissions() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+		if (Build.VERSION.SDK_INT >= 31) { // Use direct API level for Android 12 (S)
 			mStrPermission = new String[]{
 					Manifest.permission.ACCESS_FINE_LOCATION,
 					Manifest.permission.BLUETOOTH_SCAN,
@@ -95,6 +97,35 @@ public void serialSend(String theString) {
         mBluetoothLeService.writeCharacteristic(mSCharacteristic);
     }
 }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    public boolean connect(final String address) {
+        if (mBluetoothAdapter == null || mBluetoothLeService == null) {
+            Log.w(TAG, "BluetoothAdapter not initialized or BluetoothLeService not connected.");
+            return false;
+        }
+
+        // Previously connected device.  Try to reconnect.
+        if (mDeviceAddress != null && address.equals(mDeviceAddress)
+                && mBluetoothLeService.connect(address)) {
+            Log.d(TAG, "Attempting to connect to GATT server.");
+            mConnectionState = connectionStateEnum.isConnecting;
+            delegate.onConectionStateChange(mConnectionState);
+            return true;
+        }
+
+        final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        if (device == null) {
+            Log.w(TAG, "Device not found.  Unable to connect.");
+            return false;
+        }
+        // We want to directly connect to the device, so we don't go through the UI.
+        mBluetoothLeService.connect(device.getAddress());
+        mDeviceAddress = address;
+        mConnectionState = connectionStateEnum.isConnecting;
+        delegate.onConectionStateChange(mConnectionState);
+        return true;
+    }
 
 private int mBaudrate = 115200;    // set the default baud rate to 115200
 private String mPassword = "AT+PASSWOR=DFRobot\n\n";
@@ -286,37 +317,9 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
             	}
             	getGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-            	if(mSCharacteristic==mModelNumberCharacteristic)
-            	{
-            		if (intent.getStringExtra(BluetoothLeService.EXTRA_DATA).toUpperCase().startsWith("DF BLUNO")) {
-						mBluetoothLeService.setCharacteristicNotification(mSCharacteristic, false);
-						mSCharacteristic=mCommandCharacteristic;
-						mSCharacteristic.setValue(mPassword);
-						mBluetoothLeService.writeCharacteristic(mSCharacteristic);
-						mSCharacteristic.setValue(mBaudrateBuffer);
-						mBluetoothLeService.writeCharacteristic(mSCharacteristic);
-						mSCharacteristic=mSerialPortCharacteristic;
-						mBluetoothLeService.setCharacteristicNotification(mSCharacteristic, true);
-						mConnectionState = connectionStateEnum.isConnected;
-						delegate.onConectionStateChange(mConnectionState);
-						
-					}
-            							else {
-            		            			Toast.makeText(mainContext, "Please select DFRobot devices",Toast.LENGTH_SHORT).show();
-            		                        mConnectionState = connectionStateEnum.isToScan;
-            		                        delegate.onConectionStateChange(mConnectionState);
-            							}            	}
-            					else if (mSCharacteristic==mSerialPortCharacteristic) {
-            	            		delegate.onSerialReceived(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-            					}            	
-            
-            	System.out.println("displayData "+intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-            	
-//            	mPlainProtocol.mReceivedframe.append(intent.getStringExtra(BluetoothLeService.EXTRA_DATA)) ;
-//            	System.out.print("mPlainProtocol.mReceivedframe:");
-//            	System.out.println(mPlainProtocol.mReceivedframe.toString());
-
-            	
+            	if (mSCharacteristic==mSerialPortCharacteristic) {
+            	    delegate.onSerialReceived(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+            	}
             }
         }
     };
@@ -378,8 +381,8 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
 	@SuppressLint("MissingPermission")
 	public void scanLeDevice(final boolean enable) { // Changed to public
 		if (enable) {
-			System.out.println("mBluetoothAdapter.startLeScan");
-			mBluetoothAdapter.startLeScan(mLeScanCallback);
+			System.out.println("mBluetoothAdapter.startLeScan with filter");
+			mBluetoothAdapter.startLeScan(new java.util.UUID[]{java.util.UUID.fromString("0000dfb0-0000-1000-8000-00805f9b34fb")}, mLeScanCallback);
 		} else {
 			mBluetoothAdapter.stopLeScan(mLeScanCallback);
 		}
@@ -465,9 +468,15 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
             delegate.onConectionStateChange(mConnectionState);
 		}
         else {
-        	mSCharacteristic=mModelNumberCharacteristic;
-        	mBluetoothLeService.setCharacteristicNotification(mSCharacteristic, true);
-        	mBluetoothLeService.readCharacteristic(mSCharacteristic);
+        	mSCharacteristic=mCommandCharacteristic;
+			mSCharacteristic.setValue(mPassword);
+			mBluetoothLeService.writeCharacteristic(mSCharacteristic);
+			mSCharacteristic.setValue(mBaudrateBuffer);
+			mBluetoothLeService.writeCharacteristic(mSCharacteristic);
+			mSCharacteristic=mSerialPortCharacteristic;
+			mBluetoothLeService.setCharacteristicNotification(mSCharacteristic, true);
+			mConnectionState = connectionStateEnum.isConnected;
+			delegate.onConectionStateChange(mConnectionState);
 		}
         
     }
@@ -481,6 +490,52 @@ private String mBaudrateBuffer = "AT+CURRUART=" + mBaudrate + "\n\n";
         return intentFilter;
     }
 	
+    public void request(int requestCode, OnPermissionsResult permissionsResult) {
+        this.permissionsResult = permissionsResult;
+        this.requestCode = requestCode;
+        checkPermissionsAll();
+        requestPermissionAll(requestCode, permissionsResult);
+    }
+
+    private boolean checkPermissionsAll() {
+        mPerList.clear();
+        mPerNoList.clear();
+        for (String str : mStrPermission) {
+            if (mainContext.checkSelfPermission(str) == PackageManager.PERMISSION_GRANTED) {
+                mPerList.add(str);
+            } else {
+                mPerNoList.add(str);
+            }
+        }
+        return mPerNoList.isEmpty();
+    }
+
+    private void requestPermissionAll(int requestCode, OnPermissionsResult permissionsResult) {
+        if (mPerNoList.size() > 0) {
+            String[] array = new String[mPerNoList.size()];
+            ActivityCompat.requestPermissions((Activity) mainContext, mPerNoList.toArray(array), requestCode);
+        } else {
+            permissionsResult.OnSuccess();
+        }
+    }
+
+    public void onRequestPermissionsResultProcess(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (this.requestCode == requestCode) {
+            for (int i = 0; i < permissions.length; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    mPerList.add(permissions[i]);
+                } else {
+                    mPerNoList.add(permissions[i]);
+                }
+            }
+            if (mPerNoList.size() > 0) {
+                permissionsResult.OnFail(mPerNoList);
+            } else {
+                permissionsResult.OnSuccess();
+            }
+        }
+    }
+
 	public interface OnPermissionsResult{
 		void OnSuccess();
 		void OnFail(List<String> noPermissions);

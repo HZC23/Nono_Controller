@@ -6,7 +6,7 @@
     <data>
         <variable
             name="viewModel"
-            type="com.hzc.nonocontroller.viewmodel.CalibrationViewModel" />
+            type="com.hzc.nonocontroller.viewmodel.MainViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -40,7 +40,7 @@
             android:id="@+id/heading_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text='@{"Cap: " + viewModel.heading + "°"}'
+            android:text='@{"Cap: " + viewModel.telemetry.heading + "°"}'
             tools:text="Cap: 182°"
             android:textAppearance="?attr/textAppearanceHeadline6"
             android:layout_marginTop="32dp"

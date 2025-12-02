@@ -23,5 +23,7 @@
     <string name="set_button">Définir</string>
     <string name="go_button">Go</string>
     <string name="cancel_button">Annuler</string>
+    <string name="value_yes">YES</string>
+    <string name="value_no">NO</string>
 
 </resources>

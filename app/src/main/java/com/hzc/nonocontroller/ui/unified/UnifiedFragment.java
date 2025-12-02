@@ -1,6 +1,7 @@
 package com.hzc.nonocontroller.ui.unified;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,13 +40,42 @@ public class UnifiedFragment extends Fragment {
         blunoLibrary = ((MainActivity) requireActivity()).getBlunoLibrary();
 
         binding.scanButton.setOnClickListener(v -> {
+            mainViewModel.performHapticFeedback();
             if (blunoLibrary != null) {
                 blunoLibrary.buttonScanOnClickProcess();
             }
         });
         
         binding.settingsButton.setOnClickListener(v -> {
+            mainViewModel.performHapticFeedback();
             showSettingsDialog();
+        });
+        
+        binding.mainSendLcdMessageButton.setOnClickListener(v -> {
+            String message = binding.mainLcdMessageInput.getText().toString();
+            if (!message.isEmpty()) {
+                mainViewModel.onSendLcdMessageClicked(message);
+                binding.mainLcdMessageInput.setText(""); // Clear input
+            } else {
+                Toast.makeText(requireContext(), "Message cannot be empty", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        mainViewModel.connectionState.observe(getViewLifecycleOwner(), state -> {
+            switch (state) {
+                case isConnected:
+                    binding.scanButton.setText("Disconnect");
+                    break;
+                case isConnecting:
+                    binding.scanButton.setText("Connecting...");
+                    break;
+                case isScanning:
+                    binding.scanButton.setText("Scanning...");
+                    break;
+                default:
+                    binding.scanButton.setText("Scan");
+                    break;
+            }
         });
 
         SettingsManager settingsManager = new SettingsManager(requireContext());
@@ -84,7 +114,6 @@ public class UnifiedFragment extends Fragment {
         builder.setView(dialogView);
 
         TextView consoleButton = dialogView.findViewById(R.id.settings_console_button);
-        TextView calibrationButton = dialogView.findViewById(R.id.settings_calibration_button);
         com.google.android.material.switchmaterial.SwitchMaterial darkModeSwitch = dialogView.findViewById(R.id.settings_dark_mode_switch);
         com.google.android.material.switchmaterial.SwitchMaterial invertLayoutSwitch = dialogView.findViewById(R.id.settings_invert_layout_switch);
 
@@ -95,10 +124,6 @@ public class UnifiedFragment extends Fragment {
 
         consoleButton.setOnClickListener(v -> {
             Toast.makeText(getContext(), "Console coming soon!", Toast.LENGTH_SHORT).show();
-        });
-
-        calibrationButton.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Calibration page coming soon!", Toast.LENGTH_SHORT).show();
         });
 
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -116,6 +141,7 @@ public class UnifiedFragment extends Fragment {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
 
     @Override
     public void onDestroyView() {

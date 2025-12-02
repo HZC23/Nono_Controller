@@ -1,5 +1,6 @@
 package com.hzc.nonocontroller;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.Log;
 
@@ -25,6 +26,20 @@ public class BleManager {
                 public void onSerialReceived(String theString) {
                     if (currentDelegate != null) {
                         currentDelegate.onSerialReceived(theString);
+                    }
+                }
+
+                @Override
+                public void onScanDialogRequested() {
+                    if (currentDelegate != null) {
+                        currentDelegate.onScanDialogRequested();
+                    }
+                }
+
+                @Override
+                public void onDeviceDiscovered(BluetoothDevice device) {
+                    if (currentDelegate != null) {
+                        currentDelegate.onDeviceDiscovered(device);
                     }
                 }
             });

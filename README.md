@@ -61,7 +61,49 @@ L'application communique avec le robot en utilisant le protocole série sur BLE 
 *   **Caractéristique d'Écriture (Commandes)** : `0000dfb2-0000-1000-8000-00805f9b34fb`
 *   **Caractéristique de Lecture (Télémétrie)** : `0000dfb1-0000-1000-8000-00805f9b34fb`
 
-Les commandes sont envoyées sous forme de chaînes de caractères (ex: `CMD:MOVE:FWD\n`) et la télémétrie est reçue sous forme d'objets JSON.
+Les commandes sont envoyées sous forme de chaînes de caractères et chaque commande doit suivre un format précis et se terminer par un retour à la ligne (`\n`).
+
+**Format général :** `CMD:ACTION:VALEUR` ou `CMD:ACTION:SOUS_ACTION:VALEUR`
+
+Voici la liste des commandes disponibles et supportées par l'application :
+
+| Action             | Valeur / Sous-Action           | Description                                                                                             | Exemple                     |
+| :----------------- | :----------------------------- | :------------------------------------------------------------------------------------------------------ | :-------------------------- |
+| `MOVE`             | `FWD`, `BWD`, `LEFT`, `RIGHT`, `STOP` | Contrôle les mouvements manuels du robot. `STOP` arrête le robot et le met en état `IDLE` et `MANUAL`. | `CMD:MOVE:FWD`              |
+| `SPEED`            | `0` à `255`                    | Règle la vitesse cible des moteurs.                                                                     | `CMD:SPEED:200`             |
+| `GOTO`             | `0` à `359` (entier)           | Le robot se tourne vers le cap (angle en degrés) spécifié, puis avance en le maintenant.              | `CMD:GOTO:90`               |
+| `TURN`             | valeur flottante               | Fait tourner le robot d'un certain nombre de degrés par rapport à sa position actuelle.                 | `CMD:TURN:45.0`             |
+| `LIGHT`            | `ON` ou `OFF`                  | Allume ou éteint le phare avant.                                                                        | `CMD:LIGHT:ON`              |
+| `CALIBRATE`        | `COMPASS`                      | Lance la procédure de calibration du compas.                                                            | `CMD:CALIBRATE:COMPASS`     |
+| `SCAN`             | `START`                        | Démarre un cycle de balayage de l'environnement avec la tête.                                           | `CMD:SCAN:START`            |
+| `COMPASS_OFFSET`   | valeur flottante               | Applique une correction manuelle (offset) au compas.                                                    | `CMD:COMPASS_OFFSET:-15.5`  |
+| `LCD`              | Texte (max 32 car.)            | Affiche un message texte sur l'écran LCD.                                                               | `CMD:LCD:Bonjour !`         |
+| `ANIM`             | `NO` ou `YES`                  | Déclenche une animation de la tête pour "dire non" ou "dire oui".                                       | `CMD:ANIM:NO`               |
+| `SET`              | `SPEED_AVG:<valeur>`           | Règle la vitesse de déplacement moyenne par défaut.                                                   | `CMD:SET:SPEED_AVG:180`     |
+|                    | `SPEED_SLOW:<valeur>`          | Règle la vitesse de déplacement lente par défaut.                                                     | `CMD:SET:SPEED_SLOW:120`    |
+|                    | `CONTROL_INVERTED:<TRUE/FALSE>`| Inverse les commandes de mouvement (avant/arrière).                                                   | `CMD:SET:CONTROL_INVERTED:TRUE` |
+| `MODE`             | `AVOID`                        | Active le mode d'évitement d'obstacles intelligent.                                                     | `CMD:MODE:AVOID`            |
+|                    | `SENTRY`                       | Active le mode sentinelle (surveillance).                                                               | `CMD:MODE:SENTRY`           |
+|                    | `MANUAL`                       | Désactive les modes automatiques et repasse en mode `IDLE` (attente de commandes manuelles).         | `CMD:MODE:MANUAL`           |
+
+### Télémétrie
+
+La télémétrie permet au robot d'envoyer des informations sur son état actuel à l'application via le port série. Les données sont formatées en JSON.
+
+**Exemple de message de télémétrie :**
+
+```json
+{"state":"MOVING_FORWARD","heading":92,"distance":150,"distanceLaser":148,"battery":85,"speedTarget":180}
+```
+
+Les champs inclus sont :
+*   `state`: L'état actuel de la machine à états (ex: `MOVING_FORWARD`, `IDLE`, `SCANNING`).
+*   `heading`: Le cap actuel du robot en degrés, lu depuis le compas.
+*   `distance`: La distance mesurée par le capteur à ultrasons.
+*   `distanceLaser`: La distance mesurée par le capteur laser ToF.
+*   `battery`: Le pourcentage de batterie restant.
+*   `speedTarget`: La vitesse cible actuelle des moteurs.
+
 
 ## ⚙️ Installation et Build
 

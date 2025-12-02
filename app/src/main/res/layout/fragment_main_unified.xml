@@ -29,59 +29,59 @@
 
             <ImageButton
                 android:id="@+id/button_up"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:src="@drawable/ic_baseline_keyboard_arrow_up_24"
                 android:background="@drawable/dpad_button_background"
                 app:layout_constraintBottom_toTopOf="@+id/guideline_h"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginBottom="32dp"/>
+                android:layout_marginBottom="16dp"/>
 
             <ImageButton
                 android:id="@+id/button_down"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:src="@drawable/ic_baseline_keyboard_arrow_down_24"
                 android:background="@drawable/dpad_button_background"
                 app:layout_constraintTop_toBottomOf="@+id/guideline_h"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginTop="32dp"/>
+                android:layout_marginTop="16dp"/>
 
             <ImageButton
                 android:id="@+id/button_left"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:src="@drawable/ic_baseline_keyboard_arrow_left_24"
                 android:background="@drawable/dpad_button_background"
                 app:layout_constraintEnd_toStartOf="@+id/guideline_v"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                android:layout_marginEnd="32dp"/>
+                android:layout_marginEnd="16dp"/>
 
             <ImageButton
                 android:id="@+id/button_right"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:src="@drawable/ic_baseline_keyboard_arrow_right_24"
                 android:background="@drawable/dpad_button_background"
                 app:layout_constraintStart_toEndOf="@+id/guideline_v"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
-                android:layout_marginStart="32dp"/>
+                android:layout_marginStart="16dp"/>
                 
-            <Button
+            <ImageButton
                 android:id="@+id/button_stop_center"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="STOP"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:onClick="@{() -> viewModel.onStopButtonClicked()}"
-                style="@style/Widget.Nono.Button.Error"
-                app:layout_constraintTop_toBottomOf="@id/button_down"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                android:background="@drawable/stop_button_background"
+                app:layout_constraintTop_toTopOf="@id/guideline_h"
+                app:layout_constraintBottom_toBottomOf="@id/guideline_h"
+                app:layout_constraintStart_toStartOf="@id/guideline_v"
+                app:layout_constraintEnd_toEndOf="@id/guideline_v"
+                />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline_h"
@@ -131,13 +131,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:columnCount="1">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@{`Connexion: ` + viewModel.connectionState.toString()}"
-                        tools:text="Connexion: isConnected"
-                        android:textAppearance="?attr/textAppearanceBody1"/>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -271,6 +264,101 @@
                     android:onClick="@{() -> viewModel.onCalibrateCompassClicked()}"/>
 
             </GridLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <EditText
+                    android:id="@+id/turn_angle_input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Angle de virage"
+                    android:inputType="numberDecimal"/>
+                <Button
+                    android:id="@+id/send_turn_button"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Virer"
+                    android:onClick="@{() -> viewModel.onTurnClicked(Float.parseFloat(turnAngleInput.getText().toString()))}"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/anim_no_button"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="Anim NO"
+                    android:onClick="@{() -> viewModel.onAnimClicked(@string/value_no)}"/>
+                <Button
+                    android:id="@+id/anim_yes_button"
+                    style="@style/Widget.MaterialComponents.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Anim YES"
+                    android:onClick="@{() -> viewModel.onAnimClicked(@string/value_yes)}"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <EditText
+                    android:id="@+id/speed_avg_input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Vitesse moyenne"
+                    android:inputType="number"/>
+                <Button
+                    android:id="@+id/set_speed_avg_button"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SET"
+                    android:onClick="@{() -> viewModel.onSetSpeedAvgClicked(Integer.parseInt(speedAvgInput.getText().toString()))}"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <EditText
+                    android:id="@+id/speed_slow_input"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Vitesse lente"
+                    android:inputType="number"/>
+                <Button
+                    android:id="@+id/set_speed_slow_button"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SET"
+                    android:onClick="@{() -> viewModel.onSetSpeedSlowClicked(Integer.parseInt(speedSlowInput.getText().toString()))}"/>
+            </LinearLayout>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/control_inverted_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Commandes inversées"
+                android:textAppearance="?attr/textAppearanceSubtitle1"
+                android:onCheckedChanged="@{(_, isChecked) -> viewModel.onSetControlInvertedClicked(isChecked)}"/>
 
             <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/light_switch_main"
