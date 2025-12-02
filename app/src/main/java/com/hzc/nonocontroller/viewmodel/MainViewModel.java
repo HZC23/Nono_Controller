@@ -153,7 +153,6 @@ public class MainViewModel extends ViewModel {
     public void onStopButtonClicked() {
         performHapticFeedback();
         sendCommand(buildCommand(ACTION_MOVE, VALUE_STOP));
-        sendCommand(buildCommand(ACTION_MODE, VALUE_MANUAL));
     }
 
     // --- Manual Control ---
@@ -285,11 +284,6 @@ public class MainViewModel extends ViewModel {
     public void onAnimClicked(String anim) {
         performHapticFeedback();
         sendCommand(buildCommand(ACTION_ANIM, anim));
-    }
-
-    public void onModeManualClicked() {
-        performHapticFeedback();
-        sendCommand(buildCommand(ACTION_MODE, VALUE_MANUAL));
     }
 
 

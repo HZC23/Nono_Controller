@@ -45,6 +45,42 @@ public class UnifiedFragment extends Fragment {
                 blunoLibrary.buttonScanOnClickProcess();
             }
         });
+
+        binding.buttonUp.setOnTouchListener((v, event) -> {
+            if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                mainViewModel.onDirectionalButton("UP");
+            } else if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                mainViewModel.onDirectionalButtonReleased();
+            }
+            return true;
+        });
+
+        binding.buttonDown.setOnTouchListener((v, event) -> {
+            if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                mainViewModel.onDirectionalButton("DOWN");
+            } else if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                mainViewModel.onDirectionalButtonReleased();
+            }
+            return true;
+        });
+
+        binding.buttonLeft.setOnTouchListener((v, event) -> {
+            if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                mainViewModel.onDirectionalButton("LEFT");
+            } else if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                mainViewModel.onDirectionalButtonReleased();
+            }
+            return true;
+        });
+
+        binding.buttonRight.setOnTouchListener((v, event) -> {
+            if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                mainViewModel.onDirectionalButton("RIGHT");
+            } else if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                mainViewModel.onDirectionalButtonReleased();
+            }
+            return true;
+        });
         
         binding.settingsButton.setOnClickListener(v -> {
             mainViewModel.performHapticFeedback();
@@ -59,6 +95,17 @@ public class UnifiedFragment extends Fragment {
             } else {
                 Toast.makeText(requireContext(), "Message cannot be empty", Toast.LENGTH_SHORT).show();
             }
+        });
+
+        mainViewModel.telemetry.observe(getViewLifecycleOwner(), telemetryData -> {
+            // This is a workaround to force the UI to update.
+            // The data binding should handle this automatically, but for some reason it's not.
+            binding.telemetryStateValue.setText(telemetryData.getState());
+            binding.telemetryHeadingValue.setText(String.valueOf(telemetryData.getHeading()));
+            binding.telemetryDistanceUsValue.setText(String.valueOf(telemetryData.getDistance()));
+            binding.telemetryDistanceLaserValue.setText(String.valueOf(telemetryData.getDistanceLaser()));
+            binding.telemetryBatteryValue.setText(String.valueOf(telemetryData.getBattery()));
+            binding.telemetrySpeedTargetValue.setText(String.valueOf(telemetryData.getSpeedTarget()));
         });
 
         mainViewModel.connectionState.observe(getViewLifecycleOwner(), state -> {

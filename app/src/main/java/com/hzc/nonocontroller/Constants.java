@@ -40,7 +40,6 @@ public final class Constants {
     // Values for MODE action
     public static final String VALUE_AVOID = "AVOID";
     public static final String VALUE_SENTRY = "SENTRY";
-    public static final String VALUE_MANUAL = "MANUAL";
 
 
     // Values for ANIM action

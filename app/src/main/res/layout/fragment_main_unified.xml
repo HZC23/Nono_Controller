@@ -133,6 +133,7 @@
                     android:columnCount="1">
 
                     <TextView
+                        android:id="@+id/telemetry_state_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@{`Etat: ` + viewModel.telemetry.state}"
@@ -140,6 +141,7 @@
                         android:textAppearance="?attr/textAppearanceBody1"/>
 
                     <TextView
+                        android:id="@+id/telemetry_heading_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@{`Cap: ` + viewModel.telemetry.heading + `°`}"
@@ -147,6 +149,7 @@
                         android:textAppearance="?attr/textAppearanceBody1"/>
 
                     <TextView
+                        android:id="@+id/telemetry_distance_us_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@{`Distance US: ` + viewModel.telemetry.distance + ` cm`}"
@@ -154,6 +157,7 @@
                         android:textAppearance="?attr/textAppearanceBody1"/>
 
                     <TextView
+                        android:id="@+id/telemetry_distance_laser_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@{`Distance Laser: ` + viewModel.telemetry.distanceLaser + ` mm`}"
@@ -161,6 +165,7 @@
                         android:textAppearance="?attr/textAppearanceBody1"/>
 
                     <TextView
+                        android:id="@+id/telemetry_battery_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@{`Batterie: ` + viewModel.telemetry.battery + `%`}"
@@ -168,6 +173,7 @@
                         android:textAppearance="?attr/textAppearanceBody1"/>
 
                     <TextView
+                        android:id="@+id/telemetry_speed_target_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@{`Vitesse Cible: ` + viewModel.telemetry.speedTarget}"
