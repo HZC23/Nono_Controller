@@ -1,3 +1,40 @@
+@echo off
+REM -----------------------------------------------------------------------------
+REM Gradle start up script for Windows
+REM -----------------------------------------------------------------------------
+set DIRNAME=%~dp0
+set PROGNAME=%~nx0
+
+if defined _JAVA_HOME goto findJavaFromJavaHome
+if defined JAVA_HOME goto findJavaFromJavaHome
+
+echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation.
+goto end
+
+:findJavaFromJavaHome
+set _JAVACMD=%JAVA_HOME%\bin\java.exe
+if exist "%_JAVACMD%" goto init
+set _JAVACMD=%_JAVA_HOME%\bin\java.exe
+if exist "%_JAVACMD%" goto init
+
+echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
+goto end
+
+:init
+setlocal
+set APP_HOME=%DIRNAME%
+set WRAPPER_JAR=%APP_HOME%gradle\wrapper\gradle-wrapper.jar
+if not exist "%WRAPPER_JAR%" (
+  echo ERROR: Gradle wrapper jar not found: %WRAPPER_JAR%
+  goto end
+)
+
+"%_JAVACMD%" -jar "%WRAPPER_JAR%" %*
+
+:end
+endlocal
 @if "%DEBUG%" == "" @echo off
 @rem ##########################################################################
 @rem

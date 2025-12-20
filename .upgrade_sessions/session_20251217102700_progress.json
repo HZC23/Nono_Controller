@@ -1,0 +1,21 @@
+{
+  "sessionId": "20251217102700",
+  "timestamp": "2025-12-17T10:27:00Z",
+  "detected": {
+    "java": "java version \"21.0.9\" 2025-10-21 LTS; Java(TM) SE Runtime Environment (build 21.0.9+7-LTS-338); Java HotSpot(TM) 64-Bit Server VM (build 21.0.9+7-LTS-338, mixed mode, sharing)",
+    "gradleWrapper": {
+      "exists": true,
+      "gradleVersionInfo": "Gradle 6.5 (no main manifest attribute, in C:\\Users\\Hadrien\\Documents\\Arduino\\NoNo\\Nono Controller\\gradle\\wrapper\\gradle-wrapper.jar)"
+    },
+    "ANDROID_HOME": "C:\\Android",
+    "ANDROID_SDK_ROOT": null,
+    "sdkmanagerPath": null,
+    "adbPath": null
+  },
+  "result": "partial",
+  "remainingActions": [
+    "Install Android SDK command-line tools (sdkmanager) and add to PATH",
+    "Install Android platform-tools (adb) and add to PATH",
+    "Set ANDROID_SDK_ROOT to the Android SDK installation path if needed"
+  ]
+}

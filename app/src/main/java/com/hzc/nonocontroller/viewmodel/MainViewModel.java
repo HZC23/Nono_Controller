@@ -1,5 +1,3 @@
-package com.hzc.nonocontroller.viewmodel;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -13,9 +11,8 @@ import android.content.Context;
 import android.os.Vibrator;
 import android.os.Build;
 import android.os.VibrationEffect;
+import android.bluetooth.BluetoothDevice;
 
-
-import com.hzc.nonocontroller.BlunoLibrary;
 import com.hzc.nonocontroller.data.TelemetryData;
 import androidx.lifecycle.Observer;
 
@@ -24,9 +21,12 @@ import java.util.Queue;
 
 import static com.hzc.nonocontroller.Constants.*;
 
-public class MainViewModel extends ViewModel {
+import com.hzc.nonocontroller.ble.NonoBleManager;
+import no.nordicsemi.android.ble.observer.ConnectionObserver;
 
-    private final BlunoLibrary blunoLibrary;
+public class MainViewModel extends ViewModel implements ConnectionObserver {
+
+    private final NonoBleManager bleManager;
     private final Observer<TelemetryData> telemetryObserver;
     private final Application application; // Storing application context
     private final Vibrator vibrator;
@@ -44,8 +44,8 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<String> _serialMonitor = new MutableLiveData<>("");
     public final LiveData<String> serialMonitor = _serialMonitor;
 
-    private final MutableLiveData<BlunoLibrary.connectionStateEnum> _connectionState = new MutableLiveData<>(BlunoLibrary.connectionStateEnum.isNull);
-    public final LiveData<BlunoLibrary.connectionStateEnum> connectionState = _connectionState;
+    private final MutableLiveData<Integer> _connectionState = new MutableLiveData<>();
+    public final LiveData<Integer> connectionState = _connectionState;
 
     private final MutableLiveData<Integer> _speed = new MutableLiveData<>(150);
     public final LiveData<Integer> speed = _speed;
@@ -59,10 +59,10 @@ public class MainViewModel extends ViewModel {
     private final MutableLiveData<Boolean> _isCalibrating = new MutableLiveData<>(false);
     public final LiveData<Boolean> isCalibrating = _isCalibrating;
 
-    public MainViewModel(Application application, BlunoLibrary blunoLibrary) {
+    public MainViewModel(Application application, NonoBleManager bleManager) {
         super();
         this.application = application;
-        this.blunoLibrary = blunoLibrary;
+        this.bleManager = bleManager;
         this.vibrator = (Vibrator) application.getSystemService(Context.VIBRATOR_SERVICE);
         // Observe the telemetry data to update UI visibility
         telemetryObserver = this::updateUIVisibilityFromState;
@@ -70,10 +70,21 @@ public class MainViewModel extends ViewModel {
 
         // Observe connection state to manage command sending
         _connectionState.observeForever(s -> {
-            if (s == BlunoLibrary.connectionStateEnum.isConnected) {
+            if (bleManager.isConnected()) {
                 attemptToSendNextCommand(); // Start sending any queued commands
             }
         });
+    }
+
+    public NonoBleManager getBleManager() {
+        return bleManager;
+    }
+
+    public void connect(BluetoothDevice device) {
+        bleManager.connect(device)
+                .retry(3, 100)
+                .useAutoConnect(false)
+                .enqueue();
     }
 
     @Override
@@ -81,6 +92,7 @@ public class MainViewModel extends ViewModel {
         super.onCleared();
         _telemetry.removeObserver(telemetryObserver);
         sendingHandler.removeCallbacksAndMessages(null); // Stop any pending sends
+        bleManager.disconnect().enqueue();
     }
 
     // --- UI Visibility LiveData ---
@@ -127,6 +139,7 @@ public class MainViewModel extends ViewModel {
         serialLogBuffer.add(newText.trim()); // Add new line, trimmed
 
         // Remove oldest lines if buffer exceeds limit
+        final int MAX_SERIAL_MONITOR_LINES = 100;
         while (serialLogBuffer.size() > MAX_SERIAL_MONITOR_LINES) {
             serialLogBuffer.removeFirst();
         }
@@ -139,10 +152,6 @@ public class MainViewModel extends ViewModel {
         _serialMonitor.postValue(sb.toString());
     }
 
-    public void setConnectionState(BlunoLibrary.connectionStateEnum s) {
-        _connectionState.postValue(s);
-    }
-
     // --- UI Event Handlers ---
 
     public void onTurretScanClicked(View view) {
@@ -151,30 +160,37 @@ public class MainViewModel extends ViewModel {
     }
 
     public void onStopButtonClicked() {
-        performHapticFeedback();
-        sendCommand(buildCommand(ACTION_MOVE, VALUE_STOP));
+        sendCommand(buildMovementCommand(0, 0));
     }
 
     // --- Manual Control ---
+    public void onUpButtonClicked() { onDirectionalButton(DIRECTION_UP); }
+    public void onDownButtonClicked() { onDirectionalButton(DIRECTION_DOWN); }
+    public void onLeftButtonClicked() { onDirectionalButton(DIRECTION_LEFT); }
+    public void onRightButtonClicked() { onDirectionalButton(DIRECTION_RIGHT); }
+
     public void onDirectionalButton(String direction) {
-        performHapticFeedback();
-        sendCommand(buildCommand(ACTION_MOVE, directionToValue(direction)));
+        int velocity = 0;
+        int angular = 0;
+        switch (direction) {
+            case DIRECTION_UP:
+                velocity = 100;
+                break;
+            case DIRECTION_DOWN:
+                velocity = -100;
+                break;
+            case DIRECTION_LEFT:
+                angular = -100;
+                break;
+            case DIRECTION_RIGHT:
+                angular = 100;
+                break;
+        }
+        sendCommand(buildMovementCommand(velocity, angular));
     }
 
     public void onDirectionalButtonReleased() {
-        performHapticFeedback();
-        sendCommand(buildCommand(ACTION_MOVE, VALUE_STOP));
-    }
-
-    // Helper to map direction string to command value
-    private String directionToValue(String direction) {
-        switch (direction) {
-            case DIRECTION_UP: return VALUE_FWD;
-            case DIRECTION_DOWN: return VALUE_BWD;
-            case DIRECTION_LEFT: return VALUE_LEFT;
-            case DIRECTION_RIGHT: return VALUE_RIGHT;
-            default: return VALUE_STOP;
-        }
+        sendCommand(buildMovementCommand(0, 0)); // Stop all movement
     }
 
 
@@ -294,13 +310,15 @@ public class MainViewModel extends ViewModel {
     }
 
     private void attemptToSendNextCommand() {
-        if (blunoLibrary != null && _connectionState.getValue() == BlunoLibrary.connectionStateEnum.isConnected && !commandQueue.isEmpty()) {
+        if (bleManager.isConnected() && !commandQueue.isEmpty()) {
             String command = commandQueue.poll();
-            blunoLibrary.serialSend(command);
-            Log.d("MainViewModel", "Sent: " + command.trim());
+            if (command != null) {
+                bleManager.sendCommand(command);
+                Log.d("MainViewModel", "Sent: " + command.trim());
+            }
             // Schedule the next command sending
             sendingHandler.postDelayed(this::attemptToSendNextCommand, SEND_DELAY_MS);
-        } else if (_connectionState.getValue() != BlunoLibrary.connectionStateEnum.isConnected && !commandQueue.isEmpty()) {
+        } else if (!bleManager.isConnected() && !commandQueue.isEmpty()) {
             Log.w("MainViewModel", "Not connected, commands queued: " + commandQueue.size());
         }
     }
@@ -327,5 +345,35 @@ public class MainViewModel extends ViewModel {
                 vibrator.vibrate(50);
             }
         }
+    }
+
+    @Override
+    public void onDeviceConnecting(@NonNull BluetoothDevice device) {
+        _connectionState.postValue(0); // Using 0 for connecting, etc. Need real consts
+    }
+
+    @Override
+    public void onDeviceConnected(@NonNull BluetoothDevice device) {
+        _connectionState.postValue(1);
+    }
+
+    @Override
+    public void onDeviceFailedToConnect(@NonNull BluetoothDevice device, int reason) {
+        _connectionState.postValue(-1);
+    }
+
+    @Override
+    public void onDeviceReady(@NonNull BluetoothDevice device) {
+        _connectionState.postValue(2);
+    }
+
+    @Override
+    public void onDeviceDisconnecting(@NonNull BluetoothDevice device) {
+        _connectionState.postValue(3);
+    }
+
+    @Override
+    public void onDeviceDisconnected(@NonNull BluetoothDevice device, int reason) {
+        _connectionState.postValue(-1);
     }
 }
